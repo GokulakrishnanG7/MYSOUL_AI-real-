@@ -1,0 +1,238 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/><meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>Daily Hub — MySoul AI</title>
+<link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=DM+Sans:wght@300;400;500&family=JetBrains+Mono:wght@300;400&display=swap" rel="stylesheet"/>
+<link rel="stylesheet" href="../modules/soul-os.css"/>
+<style>
+.dash-greeting{padding:0 20px 20px;background:linear-gradient(135deg,rgba(0,200,255,.05) 0%,transparent 60%)}
+.dg-time{font-family:var(--f-mono);font-size:42px;font-weight:300;color:var(--ec);letter-spacing:-.02em}
+.dg-date{font-size:13px;color:var(--text-3);margin-top:2px}
+.dg-msg{font-family:var(--f-display);font-size:clamp(18px,4vw,24px);font-weight:700;color:var(--text-1);margin:12px 0 4px}
+.dg-sub{font-size:13px;color:var(--text-2)}
+
+.dash-grid{display:grid;grid-template-columns:1fr 1fr;gap:12px;padding:0 20px 20px}
+@media(max-width:480px){.dash-grid{grid-template-columns:1fr}}
+.dash-card{padding:18px;border-radius:18px;background:rgba(255,255,255,.025);border:1px solid rgba(255,255,255,.06);transition:all .3s ease;cursor:default}
+.dash-card:hover{border-color:rgba(var(--card-rgb),.3);background:rgba(var(--card-rgb),.05);transform:translateY(-2px)}
+.dc-icon{font-size:26px;margin-bottom:8px}
+.dc-label{font-size:11px;letter-spacing:.12em;text-transform:uppercase;color:var(--text-3);margin-bottom:6px}
+.dc-value{font-family:var(--f-display);font-size:20px;font-weight:700}
+.dc-sub{font-size:12px;color:var(--text-3);margin-top:3px}
+
+/* Mood orbs timeline */
+.mood-section{padding:0 20px 20px}
+.mood-orbs-row{display:flex;gap:8px;margin-top:10px;flex-wrap:wrap}
+.mo-wrap{display:flex;flex-direction:column;align-items:center;gap:3px}
+.mo-orb{width:24px;height:24px;border-radius:50%;opacity:.85;transition:all .2s ease;cursor:default}
+.mo-orb:hover{transform:scale(1.4);opacity:1}
+.mo-label{font-size:9px;color:var(--text-3);text-align:center;max-width:30px;text-transform:capitalize;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+
+/* Quick actions */
+.quick-actions{padding:0 20px 20px}
+.qa-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(70px,1fr));gap:10px;margin-top:10px}
+.qa-btn{padding:14px 8px;border-radius:14px;background:rgba(255,255,255,.025);border:1px solid rgba(255,255,255,.06);display:flex;flex-direction:column;align-items:center;gap:6px;cursor:pointer;text-decoration:none;transition:all .3s ease}
+.qa-btn:hover{border-color:rgba(0,200,255,.3);background:rgba(0,200,255,.06);transform:translateY(-3px)}
+.qa-icon{font-size:22px}
+.qa-text{font-size:10px;color:var(--text-2);text-align:center}
+
+/* AI Suggestion */
+.ai-suggestion{margin:0 20px 20px;padding:16px 18px;border-radius:18px;background:rgba(0,200,255,.05);border:1px solid rgba(0,200,255,.18);cursor:pointer;transition:all .3s ease}
+.ai-suggestion:hover{background:rgba(0,200,255,.1)}
+.as-label{font-size:10px;letter-spacing:.12em;color:var(--ec);margin-bottom:6px}
+.as-text{font-size:14px;color:var(--text-1);line-height:1.6}
+.as-action{font-size:12px;color:var(--ec);margin-top:8px}
+
+/* Tasks mini */
+.tasks-mini{padding:0 20px 20px}
+.tm-item{display:flex;align-items:center;gap:10px;padding:10px 14px;border-radius:12px;background:rgba(255,255,255,.02);border:1px solid rgba(255,255,255,.05);margin-bottom:6px;transition:all .2s ease}
+.tm-item:hover{background:rgba(0,200,255,.04);border-color:rgba(0,200,255,.12)}
+.tm-check{font-size:14px;cursor:pointer;transition:all .2s ease}
+.tm-check:hover{transform:scale(1.2)}
+.tm-text{flex:1;font-size:13px;color:var(--text-2)}
+.tm-pri{width:6px;height:6px;border-radius:50%;flex-shrink:0}
+</style>
+</head>
+<body>
+<div class="os-bg"></div>
+<canvas class="os-bg-canvas" id="bgCanvas"></canvas>
+<div class="os-page">
+  <div class="os-page-header" style="padding-bottom:8px">
+    <div>
+      <div class="os-page-title">Daily Hub</div>
+      <div class="os-page-subtitle">Your companion for today</div>
+    </div>
+    <a href="launcher.html" class="os-back-btn">⬡</a>
+  </div>
+
+  <!-- Greeting + Time -->
+  <div class="dash-greeting">
+    <div class="dg-time" id="dgTime">00:00</div>
+    <div class="dg-date" id="dgDate"></div>
+    <div class="dg-msg" id="dgMsg">Good morning</div>
+    <div class="dg-sub" id="dgSub">Ready to make today meaningful</div>
+  </div>
+
+  <!-- Stats cards -->
+  <div class="dash-grid">
+    <div class="dash-card" style="--card-rgb:0,200,255">
+      <div class="dc-icon">💬</div>
+      <div class="dc-label">Conversations</div>
+      <div class="dc-value os-ec" id="dcChats">0</div>
+      <div class="dc-sub">All time</div>
+    </div>
+    <div class="dash-card" style="--card-rgb:255,224,64">
+      <div class="dc-icon">📅</div>
+      <div class="dc-label">Tasks Due</div>
+      <div class="dc-value" style="color:var(--accent-y)" id="dcTasks">0</div>
+      <div class="dc-sub">Active today</div>
+    </div>
+    <div class="dash-card" style="--card-rgb:56,240,152">
+      <div class="dc-icon">🧠</div>
+      <div class="dc-label">Day Streak</div>
+      <div class="dc-value" style="color:#38f098" id="dcStreak">1</div>
+      <div class="dc-sub">Days active</div>
+    </div>
+    <div class="dash-card" style="--card-rgb:168,85,247">
+      <div class="dc-icon">◈</div>
+      <div class="dc-label">Memories</div>
+      <div class="dc-value" style="color:var(--accent-p)" id="dcMemories">0</div>
+      <div class="dc-sub">Saved moments</div>
+    </div>
+  </div>
+
+  <!-- AI Suggestion -->
+  <div class="ai-suggestion" id="aiSuggestion" onclick="refreshSuggestion()">
+    <div class="as-label">◈ Soul Suggestion</div>
+    <div class="as-text" id="suggestionText">Loading today's insight…</div>
+    <div class="as-action">Tap to refresh ↺</div>
+  </div>
+
+  <!-- Mood History -->
+  <div class="mood-section">
+    <div class="os-label" style="margin-bottom:4px">Mood History</div>
+    <div class="mood-orbs-row" id="moodOrbsRow"></div>
+  </div>
+
+  <!-- Tasks mini -->
+  <div class="tasks-mini">
+    <div class="os-label" style="margin-bottom:10px;display:flex;justify-content:space-between">
+      <span>Active Tasks</span>
+      <a href="tasks.html" style="font-size:10px;color:var(--ec);text-decoration:none">See all →</a>
+    </div>
+    <div id="tasksMini"></div>
+  </div>
+
+  <!-- Quick Actions -->
+  <div class="quick-actions">
+    <div class="os-label" style="margin-bottom:4px">Quick Actions</div>
+    <div class="qa-grid">
+      <a href="../index.html" class="qa-btn"><div class="qa-icon">💬</div><div class="qa-text">Chat</div></a>
+      <a href="emotion.html" class="qa-btn"><div class="qa-icon">🎭</div><div class="qa-text">Emotions</div></a>
+      <a href="story.html" class="qa-btn"><div class="qa-icon">📖</div><div class="qa-text">Stories</div></a>
+      <a href="tasks.html" class="qa-btn"><div class="qa-icon">📅</div><div class="qa-text">Tasks</div></a>
+      <a href="quiz.html" class="qa-btn"><div class="qa-icon">🧠</div><div class="qa-text">Quiz</div></a>
+      <div class="qa-btn" onclick="VoiceSystem.show()"><div class="qa-icon">🎤</div><div class="qa-text">Voice</div></div>
+    </div>
+  </div>
+</div>
+<nav class="os-nav" id="osNav"></nav>
+<script src="../modules/auto-voice-trigger.js"></script>
+<script src="../modules/soul-features.js"></script>
+<script src="../modules/page-shell.js"></script>
+<script>
+buildNav('daily');
+buildParticles('bgCanvas');
+
+// Live clock
+function updateClock(){
+  const now=new Date();
+  const t=now.toLocaleTimeString('en-US',{hour:'2-digit',minute:'2-digit'});
+  document.getElementById('dgTime').textContent=t;
+  document.getElementById('dgDate').textContent=now.toLocaleDateString('en-US',{weekday:'long',year:'numeric',month:'long',day:'numeric'});
+}
+updateClock(); setInterval(updateClock,1000);
+
+// Greeting
+const h=new Date().getHours();
+const msgs=[
+  [0,5,'Still awake?','The quiet hours hold their own wisdom'],
+  [5,12,'Good morning','Start gentle, build momentum'],
+  [12,17,'Good afternoon','Keep the energy flowing'],
+  [17,21,'Good evening','Reflect, recharge, reconnect'],
+  [21,24,'Good night','Let the day settle in peace'],
+];
+const [,, greet, sub]=msgs.find(([a,b])=>h>=a&&h<b)||msgs[1];
+document.getElementById('dgMsg').textContent=greet;
+document.getElementById('dgSub').textContent=sub;
+
+// Stats
+const hist=JSON.parse(localStorage.getItem('ms_hist')||'[]');
+const tasks=JSON.parse(localStorage.getItem('ms_tasks')||'[]');
+const mem=JSON.parse(localStorage.getItem('ms_memory_bank')||'[]');
+document.getElementById('dcChats').textContent=hist.length;
+document.getElementById('dcTasks').textContent=tasks.filter(t=>!t.done).length;
+document.getElementById('dcMemories').textContent=mem.length;
+
+// Mood orbs
+const ECOLS={neutral:'0,200,255',joy:'255,224,64',happy:'255,218,32',calm:'56,240,152',sad:'91,141,238',angry:'255,64,96',stressed:'255,64,96',anxious:'168,85,247',fear:'168,85,247',love:'255,107,160',surprised:'255,159,56'};
+const EGLYPHS={neutral:'🤖',joy:'😊',happy:'😄',calm:'😌',sad:'😢',angry:'😠',stressed:'😰',fear:'😨',love:'🥰',surprised:'😲'};
+const orbsEl=document.getElementById('moodOrbsRow');
+if(hist.length){
+  orbsEl.innerHTML=hist.slice(0,16).map(h=>`
+    <div class="mo-wrap">
+      <div class="mo-orb" style="background:rgb(${ECOLS[h.emotion]||'0,200,255'});box-shadow:0 0 8px rgb(${ECOLS[h.emotion]||'0,200,255'})" title="${h.emotion}"></div>
+      <div class="mo-label">${h.emotion||'?'}</div>
+    </div>
+  `).join('');
+} else {
+  orbsEl.innerHTML='<div style="font-size:12px;color:var(--text-3);padding:4px">Chat to build mood history</div>';
+}
+
+// Tasks mini
+const tasksEl=document.getElementById('tasksMini');
+const activeTasks=tasks.filter(t=>!t.done).slice(0,5);
+const PCOLS={high:'#ff4060',medium:'#ffe040',low:'#38f098'};
+if(activeTasks.length){
+  tasksEl.innerHTML=activeTasks.map(t=>`
+    <div class="tm-item">
+      <span class="tm-check" onclick="quickDone(${t.id})">○</span>
+      <span class="tm-text">${t.text}</span>
+      <div class="tm-pri" style="background:${PCOLS[t.priority]||'#00c8ff'}"></div>
+    </div>
+  `).join('');
+} else {
+  tasksEl.innerHTML='<div style="font-size:12px;color:var(--text-3);padding:8px">All clear! No active tasks.</div>';
+}
+
+function quickDone(id){
+  const t=JSON.parse(localStorage.getItem('ms_tasks')||'[]').map(x=>x.id===id?{...x,done:true}:x);
+  localStorage.setItem('ms_tasks',JSON.stringify(t));
+  location.reload();
+}
+
+// Suggestion
+const SUGGESTIONS=[
+  'Take 3 deep breaths right now. Your nervous system will thank you.',
+  'Drink some water before doing anything else today.',
+  'Name one thing you\'re grateful for in this moment.',
+  'Step outside for just 5 minutes. Natural light is medicine.',
+  'Send a kind message to someone you care about.',
+  'Write down your top 3 intentions for today.',
+  'Stretch your arms up and take a full deep breath.',
+  'Notice 5 things around you. Be here, now.',
+  'You\'re doing better than you think. Acknowledge one win.',
+  'Rest is not laziness. Give yourself permission to pause.',
+];
+let _sugIdx=Math.floor(Math.random()*SUGGESTIONS.length);
+function refreshSuggestion(){
+  _sugIdx=(_sugIdx+1)%SUGGESTIONS.length;
+  document.getElementById('suggestionText').textContent=SUGGESTIONS[_sugIdx];
+}
+document.getElementById('suggestionText').textContent=SUGGESTIONS[_sugIdx];
+
+window.quickDone=quickDone;
+</script>
+</body>
+</html>

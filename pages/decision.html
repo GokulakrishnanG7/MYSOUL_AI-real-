@@ -1,0 +1,168 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/><meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>Decision Assistant — MySoul AI</title>
+<link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=DM+Sans:wght@300;400;500&family=JetBrains+Mono:wght@300;400&display=swap" rel="stylesheet"/>
+<link rel="stylesheet" href="../modules/soul-os.css"/>
+<style>
+.dec-input-wrap{padding:0 20px 20px}
+.dec-input-area{width:100%;padding:16px 18px;min-height:90px;background:rgba(0,200,255,.05);border:1px solid rgba(0,200,255,.2);border-radius:18px;color:var(--text-1);font-size:15px;line-height:1.6;resize:none;outline:none;transition:all .25s ease}
+.dec-input-area:focus{border-color:rgba(0,200,255,.5);box-shadow:0 0 20px rgba(0,200,255,.12)}
+.dec-btn-row{display:flex;gap:10px;margin-top:12px}
+
+.dec-result{padding:0 20px 20px;display:none;animation:os-fade-up .5s ease}
+.dec-result.show{display:block}
+.dec-split{display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-bottom:16px}
+@media(max-width:500px){.dec-split{grid-template-columns:1fr}}
+.dec-card{padding:18px;border-radius:18px}
+.dec-pros{background:rgba(56,240,152,.06);border:1px solid rgba(56,240,152,.2)}
+.dec-cons{background:rgba(255,64,96,.06);border:1px solid rgba(255,64,96,.2)}
+.dec-card-title{font-family:var(--f-display);font-size:13px;letter-spacing:.1em;margin-bottom:12px;display:flex;align-items:center;gap:6px}
+.dec-pros .dec-card-title{color:rgb(56,240,152)}
+.dec-cons .dec-card-title{color:rgb(255,64,96)}
+.dec-item{display:flex;gap:8px;margin-bottom:8px;font-size:13px;color:var(--text-2);line-height:1.5;align-items:flex-start}
+.dec-item-dot{width:6px;height:6px;border-radius:50%;flex-shrink:0;margin-top:5px}
+.dec-pros .dec-item-dot{background:rgb(56,240,152)}
+.dec-cons .dec-item-dot{background:rgb(255,64,96)}
+
+.dec-verdict{padding:18px 20px;border-radius:18px;background:rgba(0,200,255,.06);border:1px solid rgba(0,200,255,.2);margin-bottom:16px}
+.dec-verdict-label{font-family:var(--f-display);font-size:11px;letter-spacing:.14em;color:var(--ec);margin-bottom:8px}
+.dec-verdict-text{font-size:14px;color:var(--text-1);line-height:1.7}
+
+.dec-emo-impact{display:flex;gap:10px;overflow-x:auto;padding-bottom:6px;scrollbar-width:none}
+.dei-card{flex-shrink:0;padding:12px 16px;border-radius:14px;background:rgba(255,255,255,.025);border:1px solid rgba(255,255,255,.06);text-align:center;min-width:90px}
+.dei-icon{font-size:22px;margin-bottom:4px}
+.dei-label{font-size:10px;color:var(--text-3)}
+
+.dec-history{padding:0 20px;margin-bottom:20px}
+.dh-item{padding:12px 16px;border-radius:14px;background:rgba(255,255,255,.02);border:1px solid rgba(255,255,255,.05);margin-bottom:8px;cursor:pointer;transition:all .2s ease}
+.dh-item:hover{background:rgba(0,200,255,.05);border-color:rgba(0,200,255,.15)}
+.dh-q{font-size:13px;color:var(--text-2);margin-bottom:3px}
+.dh-time{font-size:10px;color:var(--text-3)}
+</style>
+</head>
+<body>
+<div class="os-bg"></div>
+<canvas class="os-bg-canvas" id="bgCanvas"></canvas>
+<div class="os-page">
+  <div class="os-page-header">
+    <div>
+      <div class="os-page-title">Decision Assistant</div>
+      <div class="os-page-subtitle">Clarity through structured thinking</div>
+    </div>
+    <a href="launcher.html" class="os-back-btn">⬡</a>
+  </div>
+
+  <div class="dec-input-wrap">
+    <textarea class="dec-input-area" id="decInput" placeholder="Describe your decision or dilemma…&#10;e.g. 'Should I change my career to software development?'"></textarea>
+    <div class="dec-btn-row">
+      <button class="os-btn os-btn-solid" id="decAnalyze" style="flex:1">⚖️ Analyze Decision</button>
+      <button class="os-btn os-btn-icon" id="decVoice" title="Voice input">◎</button>
+    </div>
+  </div>
+
+  <div class="dec-result" id="decResult">
+    <div class="os-label" style="padding:0 0 10px">Analysis</div>
+    <div class="dec-split">
+      <div class="dec-card dec-pros">
+        <div class="dec-card-title">✓ Pros</div>
+        <div id="prosList"></div>
+      </div>
+      <div class="dec-card dec-cons">
+        <div class="dec-card-title">✕ Cons</div>
+        <div id="consList"></div>
+      </div>
+    </div>
+
+    <div class="os-label" style="padding:0 0 10px">Emotional Impact</div>
+    <div class="dec-emo-impact" id="emoImpact" style="margin-bottom:20px"></div>
+
+    <div class="dec-verdict" id="decVerdict">
+      <div class="dec-verdict-label">◈ Soul Recommendation</div>
+      <div class="dec-verdict-text" id="verdictText"></div>
+    </div>
+  </div>
+
+  <div class="dec-history">
+    <div class="os-label" style="margin-bottom:10px">Past Decisions</div>
+    <div id="decHistList"><div style="font-size:12px;color:var(--text-3);padding:8px">No past decisions yet</div></div>
+  </div>
+</div>
+<nav class="os-nav" id="osNav"></nav>
+<script src="../modules/auto-voice-trigger.js"></script>
+<script src="../modules/soul-features.js"></script>
+<script src="../modules/page-shell.js"></script>
+<script>
+buildNav('');
+buildParticles('bgCanvas');
+
+const KEY='ms_decisions';
+function loadHistory(){try{return JSON.parse(localStorage.getItem(KEY)||'[]');}catch{return[];}}
+function saveHistory(d){localStorage.setItem(KEY,JSON.stringify(d));}
+
+async function analyze(){
+  const text=document.getElementById('decInput').value.trim();
+  if(!text){showToast('Please describe your decision','error');return;}
+  const result=document.getElementById('decResult');
+  const verdict=document.getElementById('verdictText');
+  result.classList.add('show');
+  document.getElementById('prosList').innerHTML='<div class="os-loading"><div class="os-spinner"></div></div>';
+  document.getElementById('consList').innerHTML='';
+  verdict.innerHTML='<div class="os-loading"><div class="os-spinner"></div></div>';
+
+  const prompt=`Decision: "${text}"\n\nRespond in JSON only (no markdown):\n{"pros":["...","...","..."],"cons":["...","...","..."],"emotional_impacts":["...","..."],"recommendation":"..."}`;
+  const res=await soulAPI(prompt,'DECISION_ANALYSIS');
+  
+  let parsed=null;
+  try{
+    let raw=res.response||'';
+    raw=raw.replace(/```json|```/g,'').trim();
+    parsed=JSON.parse(raw);
+  }catch{
+    parsed={
+      pros:['Could open new opportunities','Aligns with personal growth','May provide fresh perspective'],
+      cons:['Involves uncertainty and risk','Requires significant effort','May take time to see results'],
+      emotional_impacts:['Initial anxiety','Long-term fulfillment'],
+      recommendation:'This decision requires careful reflection. Consider your core values and long-term vision. Trust your intuition — it carries wisdom your mind hasn\'t articulated yet.'
+    };
+  }
+
+  document.getElementById('prosList').innerHTML=(parsed.pros||[]).map(p=>`<div class="dec-item"><div class="dec-item-dot"></div><span>${p}</span></div>`).join('');
+  document.getElementById('consList').innerHTML=(parsed.cons||[]).map(c=>`<div class="dec-item"><div class="dec-item-dot"></div><span>${c}</span></div>`).join('');
+  
+  const EICONS=['😌','⚡','🌱','💡','🔥','💙'];
+  document.getElementById('emoImpact').innerHTML=(parsed.emotional_impacts||[]).map((e,i)=>`
+    <div class="dei-card"><div class="dei-icon">${EICONS[i%EICONS.length]}</div><div class="dei-label">${e}</div></div>
+  `).join('');
+  
+  verdict.innerHTML=formatResponse(parsed.recommendation||res.response||'Trust the process.');
+
+  // Save
+  const hist=loadHistory();
+  hist.unshift({id:Date.now(),q:text.slice(0,80),ts:new Date().toISOString()});
+  saveHistory(hist.slice(0,20));
+  renderHistory();
+}
+
+function renderHistory(){
+  const hist=loadHistory();
+  const el=document.getElementById('decHistList');
+  if(!hist.length){el.innerHTML='<div style="font-size:12px;color:var(--text-3);padding:8px">No past decisions yet</div>';return;}
+  el.innerHTML=hist.map(h=>`
+    <div class="dh-item" onclick="document.getElementById('decInput').value='${h.q.replace(/'/g,"\\'")}';window.scrollTo(0,0)">
+      <div class="dh-q">${h.q}${h.q.length>=80?'…':''}</div>
+      <div class="dh-time">${new Date(h.ts).toLocaleDateString()}</div>
+    </div>
+  `).join('');
+}
+renderHistory();
+
+document.getElementById('decAnalyze').addEventListener('click',analyze);
+document.getElementById('decVoice').addEventListener('click',()=>{
+  VoiceSystem.show();
+  VoiceSystem.onTranscript(t=>{document.getElementById('decInput').value=t;VoiceSystem.hide();analyze();});
+});
+</script>
+</body>
+</html>

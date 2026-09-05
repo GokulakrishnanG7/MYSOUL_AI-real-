@@ -1,0 +1,323 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="dark">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>MySoul AI — Sign In</title>
+<link rel="preconnect" href="https://fonts.googleapis.com"/>
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin/>
+<link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=DM+Sans:ital,wght@0,300;0,400;0,500;1,300&family=JetBrains+Mono:wght@300;400&display=swap" rel="stylesheet"/>
+<style>
+:root {
+  --gold: #FFB347; --teal: #00E5CC; --purple: #6B3FA0;
+  --bg: #1A0A2E; --bg2: #0d0620;
+  --text: #e8e0ff; --text2: rgba(200,185,255,0.6); --text3: rgba(160,140,220,0.4);
+  --f-display: 'Syne', sans-serif; --f-body: 'DM Sans', sans-serif; --f-mono: 'JetBrains Mono', monospace;
+}
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+html,body{width:100%;height:100%;overflow:hidden}
+body{font-family:var(--f-body);background:var(--bg2);color:var(--text);-webkit-font-smoothing:antialiased}
+button{border:none;background:none;font-family:inherit;cursor:pointer}
+input{font-family:inherit}
+
+.bg{position:fixed;inset:0;z-index:0;background:radial-gradient(ellipse 80% 60% at 20% 15%,rgba(107,63,160,0.4) 0%,transparent 55%),radial-gradient(ellipse 60% 50% at 80% 85%,rgba(0,229,204,0.12) 0%,transparent 50%),#1A0A2E;}
+.bg-stars{position:fixed;inset:0;z-index:1;pointer-events:none;overflow:hidden}
+.star{position:absolute;border-radius:50%;background:rgba(255,255,255,0.6);animation:twinkle linear infinite}
+@keyframes twinkle{0%,100%{opacity:.2}50%{opacity:.8}}
+
+.auth-wrap{position:relative;z-index:10;width:100%;height:100%;display:flex;align-items:center;justify-content:center;padding:20px;overflow-y:auto}
+
+.auth-card{
+  width:100%;max-width:420px;
+  background:rgba(26,10,46,0.85);
+  backdrop-filter:blur(32px);
+  border:1.5px solid rgba(107,63,160,0.35);
+  border-radius:24px;
+  padding:40px 36px;
+  animation:cardIn .7s cubic-bezier(0.16,1,0.3,1) both;
+}
+@keyframes cardIn{from{opacity:0;transform:translateY(40px) scale(.96)}to{opacity:1;transform:none}}
+
+.auth-logo{display:flex;align-items:center;justify-content:center;gap:12px;margin-bottom:32px}
+.logo-orb{
+  width:44px;height:44px;border-radius:50%;
+  background:conic-gradient(from 0deg,#FFB347,#A855F7,#00E5CC,#FFB347);
+  padding:2px;animation:logoSpin 4s linear infinite;
+}
+.logo-inner{width:100%;height:100%;border-radius:50%;background:var(--bg2);display:flex;align-items:center;justify-content:center;font-size:18px}
+@keyframes logoSpin{to{transform:rotate(360deg)}}
+.logo-text{font-family:var(--f-display);font-size:22px;font-weight:800;background:linear-gradient(135deg,var(--teal),var(--gold));-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text}
+
+/* Tab switcher */
+.auth-tabs{display:flex;background:rgba(255,255,255,0.04);border-radius:12px;padding:4px;margin-bottom:28px}
+.auth-tab{flex:1;padding:10px;border-radius:8px;font-family:var(--f-display);font-size:13px;font-weight:700;letter-spacing:.06em;color:var(--text3);transition:all .25s}
+.auth-tab.active{background:linear-gradient(135deg,rgba(0,229,204,0.2),rgba(107,63,160,0.25));color:var(--teal);box-shadow:0 0 20px rgba(0,229,204,0.1)}
+
+/* Form */
+.auth-form{display:flex;flex-direction:column;gap:16px}
+.form-group{display:flex;flex-direction:column;gap:6px}
+.form-label{font-size:11px;color:var(--text3);letter-spacing:.12em;font-family:var(--f-mono)}
+.form-input{
+  padding:13px 16px;background:rgba(255,255,255,0.04);
+  border:1.5px solid rgba(107,63,160,0.25);border-radius:12px;
+  color:var(--text);font-size:15px;outline:none;transition:all .3s;
+}
+.form-input:focus{border-color:rgba(0,229,204,0.5);background:rgba(0,229,204,0.04);box-shadow:0 0 20px rgba(0,229,204,0.08)}
+.form-input::placeholder{color:var(--text3)}
+
+.form-submit{
+  padding:15px;border-radius:14px;cursor:pointer;margin-top:4px;
+  background:linear-gradient(135deg,rgba(0,229,204,0.25),rgba(107,63,160,0.35));
+  border:1.5px solid rgba(0,229,204,0.4);
+  color:var(--teal);font-family:var(--f-display);font-size:15px;font-weight:700;letter-spacing:.08em;
+  transition:all .3s;box-shadow:0 0 30px rgba(0,229,204,0.1);
+}
+.form-submit:hover{box-shadow:0 0 50px rgba(0,229,204,0.25);transform:translateY(-1px)}
+.form-submit:disabled{opacity:.4;cursor:not-allowed;transform:none}
+
+.or-divider{display:flex;align-items:center;gap:12px;margin:4px 0}
+.or-divider::before,.or-divider::after{content:'';flex:1;height:1px;background:rgba(255,255,255,0.07)}
+.or-divider span{font-size:11px;color:var(--text3);letter-spacing:.1em}
+
+.google-btn{
+  display:flex;align-items:center;justify-content:center;gap:10px;
+  padding:13px;border-radius:12px;cursor:pointer;
+  background:rgba(255,255,255,0.06);border:1.5px solid rgba(255,255,255,0.1);
+  color:var(--text2);font-size:14px;font-weight:500;transition:all .3s;
+}
+.google-btn:hover{background:rgba(255,255,255,0.1);border-color:rgba(255,255,255,0.2)}
+.google-icon{font-size:18px}
+
+.auth-error{
+  padding:10px 14px;border-radius:10px;font-size:13px;color:#ff6b6b;
+  background:rgba(255,60,60,0.1);border:1px solid rgba(255,60,60,0.2);
+  display:none;
+}
+.auth-error.show{display:block}
+.auth-success{
+  padding:10px 14px;border-radius:10px;font-size:13px;color:var(--teal);
+  background:rgba(0,229,204,0.08);border:1px solid rgba(0,229,204,0.2);
+  display:none;
+}
+.auth-success.show{display:block}
+
+.auth-footer{margin-top:20px;text-align:center;font-size:12px;color:var(--text3)}
+.auth-footer a{color:var(--teal);text-decoration:none;border-bottom:1px solid rgba(0,229,204,0.3)}
+
+.loading-spin{display:inline-block;width:16px;height:16px;border:2px solid rgba(0,229,204,0.2);border-top-color:var(--teal);border-radius:50%;animation:spin .7s linear infinite;vertical-align:middle;margin-right:8px}
+@keyframes spin{to{transform:rotate(360deg)}}
+
+/* Name display */
+.setup-hint{padding:12px 14px;border-radius:10px;background:rgba(0,229,204,0.06);border:1px solid rgba(0,229,204,0.15);font-size:13px;color:var(--text2);display:none}
+.setup-hint.show{display:block}
+</style>
+</head>
+<body>
+
+<div class="bg"></div>
+<div class="bg-stars" id="bgStars"></div>
+
+<div class="auth-wrap">
+  <div class="auth-card">
+
+    <div class="auth-logo">
+      <div class="logo-orb"><div class="logo-inner">✦</div></div>
+      <div class="logo-text">MySoul AI</div>
+    </div>
+
+    <div class="setup-hint" id="setupHint"></div>
+
+    <div class="auth-tabs">
+      <button class="auth-tab active" id="tabLogin">Sign In</button>
+      <button class="auth-tab" id="tabRegister">Create Account</button>
+    </div>
+
+    <div class="auth-error" id="authError"></div>
+    <div class="auth-success" id="authSuccess"></div>
+
+    <!-- LOGIN FORM -->
+    <div id="loginForm">
+      <div class="auth-form">
+        <div class="form-group">
+          <label class="form-label">EMAIL ADDRESS</label>
+          <input class="form-input" id="loginEmail" type="email" placeholder="you@example.com" autocomplete="email"/>
+        </div>
+        <div class="form-group">
+          <label class="form-label">PASSWORD</label>
+          <input class="form-input" id="loginPass" type="password" placeholder="Enter your password" autocomplete="current-password"/>
+        </div>
+        <button class="form-submit" id="loginBtn">Sign In</button>
+        <div class="or-divider"><span>OR</span></div>
+        <button class="google-btn" id="googleLogin">
+          <span class="google-icon">G</span> Continue with Google
+        </button>
+      </div>
+    </div>
+
+    <!-- REGISTER FORM -->
+    <div id="registerForm" style="display:none">
+      <div class="auth-form">
+        <div class="form-group">
+          <label class="form-label">FULL NAME</label>
+          <input class="form-input" id="regName" type="text" placeholder="Your name" autocomplete="name"/>
+        </div>
+        <div class="form-group">
+          <label class="form-label">EMAIL ADDRESS</label>
+          <input class="form-input" id="regEmail" type="email" placeholder="you@example.com" autocomplete="email"/>
+        </div>
+        <div class="form-group">
+          <label class="form-label">PASSWORD</label>
+          <input class="form-input" id="regPass" type="password" placeholder="Create a strong password" autocomplete="new-password"/>
+        </div>
+        <button class="form-submit" id="registerBtn">Create Account</button>
+        <div class="or-divider"><span>OR</span></div>
+        <button class="google-btn" id="googleRegister">
+          <span class="google-icon">G</span> Continue with Google
+        </button>
+      </div>
+    </div>
+
+    <div class="auth-footer">
+      <a href="onboarding.html">← Back to setup</a>
+      &nbsp;·&nbsp;
+      <a href="../index.html">Skip to app</a>
+    </div>
+
+  </div>
+</div>
+
+<script>
+'use strict';
+
+/* Stars */
+(function(){
+  const c=document.getElementById('bgStars');
+  for(let i=0;i<60;i++){const s=document.createElement('div');s.className='star';const z=0.5+Math.random()*1.5;s.style.cssText=`width:${z}px;height:${z}px;left:${Math.random()*100}%;top:${Math.random()*100}%;animation-duration:${2+Math.random()*4}s;animation-delay:${Math.random()*4}s`;c.appendChild(s);}
+})();
+
+/* Setup hint from onboarding */
+const setup = JSON.parse(localStorage.getItem('ms_setup')||'{}');
+if(setup.user_name){
+  const hint = document.getElementById('setupHint');
+  hint.innerHTML = `Welcome, <strong>${setup.user_name}</strong>! Sign in or create an account to continue with <strong>${setup.ai_name||'MySoul'}</strong>.`;
+  hint.classList.add('show');
+}
+
+/* Tabs */
+document.getElementById('tabLogin').addEventListener('click', ()=>{
+  document.getElementById('tabLogin').classList.add('active');
+  document.getElementById('tabRegister').classList.remove('active');
+  document.getElementById('loginForm').style.display='block';
+  document.getElementById('registerForm').style.display='none';
+  clearMessages();
+});
+document.getElementById('tabRegister').addEventListener('click', ()=>{
+  document.getElementById('tabRegister').classList.add('active');
+  document.getElementById('tabLogin').classList.remove('active');
+  document.getElementById('registerForm').style.display='block';
+  document.getElementById('loginForm').style.display='none';
+  clearMessages();
+});
+
+function showError(msg){ const e=document.getElementById('authError'); e.textContent=msg; e.classList.add('show'); document.getElementById('authSuccess').classList.remove('show'); }
+function showSuccess(msg){ const e=document.getElementById('authSuccess'); e.textContent=msg; e.classList.add('show'); document.getElementById('authError').classList.remove('show'); }
+function clearMessages(){ document.getElementById('authError').classList.remove('show'); document.getElementById('authSuccess').classList.remove('show'); }
+
+function setLoading(btn, loading){
+  if(loading){ btn.innerHTML=`<span class="loading-spin"></span>Please wait…`; btn.disabled=true; }
+  else { btn.textContent = btn.id==='loginBtn'?'Sign In':'Create Account'; btn.disabled=false; }
+}
+
+/* Store JWT */
+function storeToken(token){
+  // httpOnly cookies set by server; if returned in body, store in memory only
+  if(token) sessionStorage.setItem('ms_jwt', token);
+}
+
+/* LOGIN */
+document.getElementById('loginBtn').addEventListener('click', async ()=>{
+  const email = document.getElementById('loginEmail').value.trim();
+  const pass  = document.getElementById('loginPass').value;
+  if(!email||!pass){ showError('Please fill in all fields.'); return; }
+  const btn = document.getElementById('loginBtn');
+  setLoading(btn, true); clearMessages();
+
+  try {
+    const r = await fetch('/api/auth/login', {
+      method:'POST', headers:{'Content-Type':'application/json'},
+      body:JSON.stringify({email, password:pass}),
+      signal:AbortSignal.timeout(10000),
+    });
+    const d = await r.json();
+    if(!r.ok) throw new Error(d.detail||d.message||'Login failed');
+    storeToken(d.access_token);
+    showSuccess('✓ Signed in! Redirecting…');
+    setTimeout(()=>window.location.href='../index.html', 800);
+  } catch(e){
+    // Demo: allow skip to app
+    if(e.message.includes('fetch')||e.message.includes('Failed')){
+      showError('Backend unavailable — using demo mode.');
+      setTimeout(()=>window.location.href='../index.html', 1200);
+    } else {
+      showError(e.message);
+      setLoading(btn, false);
+    }
+  }
+});
+
+/* REGISTER */
+document.getElementById('registerBtn').addEventListener('click', async ()=>{
+  const name  = document.getElementById('regName').value.trim();
+  const email = document.getElementById('regEmail').value.trim();
+  const pass  = document.getElementById('regPass').value;
+  if(!name||!email||!pass){ showError('Please fill in all fields.'); return; }
+  if(pass.length<6){ showError('Password must be at least 6 characters.'); return; }
+  const btn = document.getElementById('registerBtn');
+  setLoading(btn, true); clearMessages();
+
+  try {
+    const r = await fetch('/api/auth/register', {
+      method:'POST', headers:{'Content-Type':'application/json'},
+      body:JSON.stringify({name, email, password:pass, ...setup}),
+      signal:AbortSignal.timeout(10000),
+    });
+    const d = await r.json();
+    if(!r.ok) throw new Error(d.detail||d.message||'Registration failed');
+    storeToken(d.access_token);
+    showSuccess('✓ Account created! Welcome to MySoul AI!');
+    setTimeout(()=>window.location.href='../index.html', 900);
+  } catch(e){
+    if(e.message.includes('fetch')||e.message.includes('Failed')){
+      showError('Backend unavailable — using demo mode.');
+      setTimeout(()=>window.location.href='../index.html', 1200);
+    } else {
+      showError(e.message);
+      setLoading(btn, false);
+    }
+  }
+});
+
+/* GOOGLE OAUTH */
+function googleOAuth(){
+  // Redirect to backend Google OAuth endpoint
+  const redirectUri = encodeURIComponent(window.location.origin + '/api/auth/google/callback');
+  // Try backend redirect; fallback to demo
+  try {
+    window.location.href = `/api/auth/google?redirect_uri=${redirectUri}`;
+  } catch(e) {
+    showError('Google sign-in requires backend connection.');
+  }
+}
+document.getElementById('googleLogin').addEventListener('click', googleOAuth);
+document.getElementById('googleRegister').addEventListener('click', googleOAuth);
+
+/* Enter key support */
+['loginEmail','loginPass'].forEach(id=>{
+  document.getElementById(id)?.addEventListener('keydown', e=>{ if(e.key==='Enter') document.getElementById('loginBtn').click(); });
+});
+['regName','regEmail','regPass'].forEach(id=>{
+  document.getElementById(id)?.addEventListener('keydown', e=>{ if(e.key==='Enter') document.getElementById('registerBtn').click(); });
+});
+</script>
+</body>
+</html>

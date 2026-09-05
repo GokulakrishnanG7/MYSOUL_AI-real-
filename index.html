@@ -1,0 +1,1355 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="dark" data-emotion="neutral" data-intensity="medium">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>MySoul AI — Emotional Intelligence Companion</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com"/>
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin/>
+  <link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=DM+Sans:ital,wght@0,300;0,400;0,500;1,300&family=JetBrains+Mono:wght@300;400&display=swap" rel="stylesheet"/>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+  <!-- Fixed: CSS paths now reference styles/ subfolder -->
+  <link rel="stylesheet" href="styles/base.css"/>
+  <link rel="stylesheet" href="styles/themes.css"/>
+  <link rel="stylesheet" href="styles/animations.css"/>
+  <link rel="stylesheet" href="styles/responsive.css"/>
+  <link rel="stylesheet" href="styles/enhancements.css"/>
+<style>
+/* ═══ DE-STRESS GAME PANEL ═══ */
+.sg-mode-bar{display:flex;gap:8px;flex-wrap:wrap;justify-content:center;margin-bottom:14px}
+.sg-mode-btn{padding:7px 16px;border-radius:20px;background:rgba(0,200,255,.07);border:1px solid rgba(0,200,255,.2);color:rgba(180,210,255,.7);font-family:'Syne',sans-serif;font-size:12px;cursor:pointer;transition:all .25s ease}
+.sg-mode-btn.active,.sg-mode-btn:hover{background:rgba(0,200,255,.2);border-color:rgba(0,200,255,.6);color:rgba(0,200,255,.95)}
+.sg-game{display:none;flex-direction:column;align-items:center;gap:12px;width:100%}
+.sg-game.active{display:flex}
+.sg-stats{display:flex;gap:18px;font-size:12px;color:rgba(180,210,255,.7);font-family:'Syne',sans-serif}
+.sg-stats strong{color:#fff}
+.sg-combo{background:rgba(255,160,50,.15);border:1px solid rgba(255,160,50,.4);border-radius:12px;padding:2px 10px;animation:sgPulse .4s ease-in-out infinite alternate}
+@keyframes sgPulse{from{transform:scale(1)}to{transform:scale(1.06)}}
+.sg-arena{position:relative;width:100%;max-width:560px;height:280px;background:rgba(0,10,30,.5);border-radius:18px;border:1px solid rgba(0,200,255,.12);overflow:hidden}
+.sg-start-msg{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;color:rgba(180,210,255,.5);font-family:'Syne',sans-serif;font-size:15px;text-align:center;line-height:1.8}
+.sg-start-msg small{font-size:11px;opacity:.6}
+.sg-bubble{position:absolute;border-radius:50%;cursor:pointer;display:flex;align-items:center;justify-content:center;font-size:18px;transition:transform .1s;user-select:none;animation:sgFloat linear infinite}
+.sg-bubble:hover{transform:scale(1.1)}
+.sg-bubble.popped{animation:sgPop .3s ease-out forwards!important;pointer-events:none}
+@keyframes sgFloat{0%{transform:translateY(0) scale(1)}50%{transform:translateY(-12px) scale(1.03)}100%{transform:translateY(0) scale(1)}}
+@keyframes sgPop{0%{transform:scale(1);opacity:1}60%{transform:scale(1.6);opacity:.4}100%{transform:scale(2.2);opacity:0}}
+.sg-controls{display:flex;gap:10px;align-items:center;flex-wrap:wrap;justify-content:center}
+.sg-hint{font-size:11px;color:rgba(150,190,255,.4);text-align:center;font-style:italic;margin-top:4px}
+
+/* ZEN */
+.sg-zen-tools{display:flex;gap:8px;align-items:center;flex-wrap:wrap;justify-content:center}
+.sg-tool{width:38px;height:38px;border-radius:50%;background:rgba(0,200,255,.07);border:1px solid rgba(0,200,255,.2);color:rgba(0,200,255,.8);font-size:16px;cursor:pointer;transition:all .2s ease;display:flex;align-items:center;justify-content:center}
+.sg-tool.active,.sg-tool:hover{background:rgba(0,200,255,.22);border-color:rgba(0,200,255,.6)}
+.sg-color-pick{width:38px;height:38px;border-radius:50%;border:1px solid rgba(0,200,255,.3);background:transparent;cursor:pointer;padding:2px}
+.sg-canvas{border-radius:16px;background:rgba(0,15,35,.8);border:1px solid rgba(0,200,255,.1);cursor:crosshair;max-width:100%;touch-action:none}
+
+/* BREATH BALL */
+.sg-bb-wrap{position:relative;width:200px;height:200px;display:flex;align-items:center;justify-content:center;flex-shrink:0}
+.sg-bb-ring{position:absolute;border-radius:50%;border:1px solid rgba(0,200,255,.15)}
+.sg-bb-r1{inset:0}
+.sg-bb-r2{inset:-18px;border-color:rgba(0,200,255,.08)}
+.sg-bb-r3{inset:-36px;border-color:rgba(0,200,255,.04)}
+.sg-bb-ball{width:80px;height:80px;border-radius:50%;background:radial-gradient(circle at 35% 35%,rgba(0,200,255,.6),rgba(0,80,160,.8));border:2px solid rgba(0,200,255,.6);display:flex;align-items:center;justify-content:center;cursor:pointer;transition:all .3s ease;box-shadow:0 0 30px rgba(0,200,255,.3);position:relative;z-index:1}
+.sg-bb-ball span{font-size:9px;color:rgba(220,240,255,.8);font-family:'Syne',sans-serif;letter-spacing:.05em;text-align:center;padding:4px}
+.sg-bb-ball.inhale{animation:bbInhale var(--bb-dur,4s) ease-in-out forwards}
+.sg-bb-ball.hold{animation:bbHold var(--bb-dur,4s) ease-in-out forwards}
+.sg-bb-ball.exhale{animation:bbExhale var(--bb-dur,4s) ease-in-out forwards}
+@keyframes bbInhale{from{transform:scale(1);box-shadow:0 0 20px rgba(0,200,255,.3)}to{transform:scale(1.9);box-shadow:0 0 60px rgba(0,200,255,.7)}}
+@keyframes bbHold{from,to{transform:scale(1.9);box-shadow:0 0 60px rgba(168,85,247,.7)}}
+@keyframes bbExhale{from{transform:scale(1.9);box-shadow:0 0 60px rgba(0,200,255,.5)}to{transform:scale(1);box-shadow:0 0 20px rgba(0,200,255,.2)}}
+.sg-bb-phase{font-family:'Syne',sans-serif;font-size:14px;letter-spacing:.15em;text-transform:uppercase;color:rgba(0,200,255,.7);min-height:22px}
+.sg-bb-counter{display:flex;gap:20px;font-size:12px;color:rgba(180,210,255,.5);font-family:'JetBrains Mono',monospace}
+.sg-bb-counter strong{color:#fff}
+</style>
+</head>
+<body>
+
+<!-- ═══════ IMMERSIVE BACKGROUND LAYERS ═══════ -->
+<div class="bg-cosmos" id="bgCosmos">
+  <canvas id="particleCanvas"></canvas>
+  <div class="bg-layer bg-gradient"></div>
+  <div class="bg-layer bg-fog"></div>
+  <div class="bg-layer bg-rays" id="bgRays"></div>
+  <div class="bg-layer bg-vignette"></div>
+</div>
+
+<!-- ═══════ CURSOR ═══════ -->
+<div class="cursor-ring" id="cursorRing"></div>
+<div class="cursor-dot" id="cursorDot"></div>
+
+<!-- ═══════ LOCK SCREEN ═══════ -->
+<div id="lockScreen" class="lock-screen hidden">
+  <div class="lock-aura"></div>
+  <div class="lock-box">
+    <div class="lock-glyph">◈</div>
+    <h2 class="lock-name">MySoul AI</h2>
+    <p class="lock-hint">Enter any 4-digit passcode</p>
+    <div class="lock-dots" id="lockDots">
+      <span></span><span></span><span></span><span></span>
+    </div>
+    <div class="lock-pad">
+      <button class="kp" data-v="1">1</button><button class="kp" data-v="2">2</button><button class="kp" data-v="3">3</button>
+      <button class="kp" data-v="4">4</button><button class="kp" data-v="5">5</button><button class="kp" data-v="6">6</button>
+      <button class="kp" data-v="7">7</button><button class="kp" data-v="8">8</button><button class="kp" data-v="9">9</button>
+      <button class="kp kp-clear" data-v="clear">⌫</button><button class="kp" data-v="0">0</button><button class="kp kp-ok" data-v="ok">✓</button>
+    </div>
+    <div class="lock-guide">
+      <span class="lg-arrow">↑</span>
+      <span class="lg-text">Type any 4 digits — auto-unlocks · ⌫ to delete · ✓ to confirm</span>
+    </div>
+    <button class="lock-skip-btn" id="lockSkip">Skip → Demo Mode</button>
+  </div>
+</div>
+
+<!-- ═══════ CINEMATIC LOADER ═══════ -->
+<div id="loader" class="loader">
+  <div class="loader-cosmos">
+    <div class="loader-orb">
+      <div class="loader-orb-core"></div>
+      <div class="loader-orb-ring r1"></div>
+      <div class="loader-orb-ring r2"></div>
+      <div class="loader-orb-ring r3"></div>
+    </div>
+  </div>
+  <div class="loader-brand">MySoul AI</div>
+  <div class="loader-status" id="loaderStatus">Awakening consciousness...</div>
+  <div class="loader-progress"><div class="loader-fill" id="loaderFill"></div></div>
+</div>
+
+<!-- ═══════ MAIN APPLICATION ═══════ -->
+<div id="app" class="app hidden">
+
+  <!-- HEADER -->
+  <header class="header" id="mainHeader">
+    <div class="header-left">
+      <div class="brand" id="brandLogo">
+        <div class="brand-orb">
+          <div class="brand-core"></div>
+          <div class="brand-ring"></div>
+        </div>
+        <div class="brand-words">
+          <span class="brand-name">MySoul</span>
+          <span class="brand-ai">AI</span>
+        </div>
+      </div>
+    </div>
+
+    <nav class="nav-cluster" id="navCluster">
+      <button class="nav-pill active" data-view="home">
+        <span class="nav-icon">⬡</span><span>Soul</span>
+      </button>
+      <button class="nav-pill" data-view="insights">
+        <span class="nav-icon">◉</span><span>Insights</span>
+      </button>
+      <button class="nav-pill" data-view="wellness">
+        <span class="nav-icon">✦</span><span>Wellness</span>
+      </button>
+      <button class="nav-pill" data-view="universe">
+        <span class="nav-icon">☽</span><span>Universe</span>
+      </button>
+    </nav>
+
+    <div class="header-right">
+      <div class="status-beacon" id="statusBeacon">
+        <div class="beacon-pulse"></div>
+        <span id="statusLabel">Aware</span>
+      </div>
+      <button class="hdr-btn" id="notifBtn" title="Reminders">🔔<span class="notif-dot hidden" id="notifDot"></span></button>
+      <button class="hdr-btn" id="heartbeatBtn" title="Heartbeat">♡</button>
+      <a href="pages/launcher.html" class="hdr-btn" title="MySoul OS" style="text-decoration:none;font-size:14px">⬡</a>
+      <a href="pages/onboarding.html" class="hdr-btn" title="Setup" style="text-decoration:none;font-size:14px">✦</a>
+      <a href="pages/auth.html" class="hdr-btn" title="Account" style="text-decoration:none;font-size:13px">👤</a>
+      <button class="hdr-btn" id="lockBtn" title="Lock">⊙</button>
+      <button class="hdr-btn" id="themeToggle" title="Theme">◐</button>
+    </div>
+  </header>
+
+  <!-- ════════════════════════
+       VIEW: HOME
+  ════════════════════════ -->
+  <div class="view active" id="view-home">
+    <div class="home-grid">
+
+      <!-- LEFT: Emotion Consciousness Panel -->
+      <aside class="panel panel-left glass-deep" id="emotionPanel">
+
+        <!-- Emotion Orb -->
+        <div class="emo-orb-wrap">
+          <div class="emo-orb" id="emoOrb">
+            <div class="eo-aura eo-aura-1"></div>
+            <div class="eo-aura eo-aura-2"></div>
+            <div class="eo-aura eo-aura-3"></div>
+            <div class="eo-core" id="eoCore">
+              <div class="eo-glyph" id="eoGlyph">🤖</div>
+            </div>
+          </div>
+          <div class="emo-label" id="emoLabel">NEUTRAL</div>
+          <div class="emo-sublabel" id="emoSublabel">Balanced · Ready</div>
+        </div>
+
+        <!-- Intensity Ring -->
+        <div class="intensity-ring-wrap">
+          <svg class="intensity-svg" viewBox="0 0 120 120">
+            <circle class="ir-track" cx="60" cy="60" r="50" fill="none" stroke-width="6"/>
+            <circle class="ir-fill" id="irFill" cx="60" cy="60" r="50" fill="none" stroke-width="6"
+              stroke-linecap="round" stroke-dasharray="314" stroke-dashoffset="157"
+              transform="rotate(-90 60 60)"/>
+            <text x="60" y="55" text-anchor="middle" class="ir-pct" id="irPct">–</text>
+            <text x="60" y="72" text-anchor="middle" class="ir-tag">INTENSITY</text>
+          </svg>
+        </div>
+
+        <!-- Pattern + Context -->
+        <div class="meta-tags" id="metaTags">
+          <div class="meta-tag hidden" id="patternTag">
+            <span class="mt-icon">↗</span><span id="patternText">–</span>
+          </div>
+          <div class="meta-tag hidden" id="contextTag">
+            <span class="mt-icon">◈</span><span id="contextText">–</span>
+          </div>
+        </div>
+
+        <!-- Timeline / Memory Panel -->
+        <div class="timeline-section">
+          <div class="section-label">SOUL TIMELINE</div>
+          <div class="timeline-scroll" id="emotionTimeline">
+            <div class="tl-empty">Your journey begins here</div>
+          </div>
+        </div>
+
+        <!-- Soul Pet -->
+        <div class="pet-zone" id="petZone">
+          <div class="pet-bubble" id="petBubble">I'm here for you ✦</div>
+          <div class="pet-entity" id="petEntity">
+            <div class="pe-body">
+              <div class="pe-eyes">
+                <div class="pe-eye pe-eye-l"><div class="pe-pupil"></div></div>
+                <div class="pe-eye pe-eye-r"><div class="pe-pupil"></div></div>
+              </div>
+              <div class="pe-mouth" id="peMouth">‿</div>
+            </div>
+            <div class="pe-tail"></div>
+          </div>
+        </div>
+      </aside>
+
+      <!-- CENTER: Soul Core Interface -->
+      <section class="center-stage" id="centerStage">
+
+        <!-- Soul Core Orb -->
+        <div class="soul-system" id="soulSystem">
+          <div class="sys-ring sys-ring-1"></div>
+          <div class="sys-ring sys-ring-2"></div>
+          <div class="sys-ring sys-ring-3"></div>
+          <div class="orbit-particle op-1"></div>
+          <div class="orbit-particle op-2"></div>
+          <div class="orbit-particle op-3"></div>
+
+          <div class="soul-orb" id="soulOrb">
+            <div class="so-shell"></div>
+            <div class="so-glow"></div>
+            <div class="so-face">
+              <svg id="orbExpression" viewBox="0 0 100 100">
+                <ellipse id="eyeL" cx="35" cy="40" rx="8" ry="8" fill="var(--ec)" opacity=".9"/>
+                <ellipse id="eyeR" cx="65" cy="40" rx="8" ry="8" fill="var(--ec)" opacity=".9"/>
+                <circle  id="pupL" cx="37" cy="41" r="3.5" fill="rgba(0,0,0,0.8)"/>
+                <circle  id="pupR" cx="67" cy="41" r="3.5" fill="rgba(0,0,0,0.8)"/>
+                <path    id="mouth" d="M35 62 Q50 72 65 62" stroke="var(--ec)" stroke-width="2.5" fill="none" stroke-linecap="round"/>
+              </svg>
+            </div>
+            <div class="think-ring tr1"></div>
+            <div class="think-ring tr2"></div>
+            <div class="think-ring tr3"></div>
+          </div>
+
+          <div class="voice-corona" id="voiceCorona">
+            <div class="vc-bar" style="--bi:0"></div><div class="vc-bar" style="--bi:1"></div>
+            <div class="vc-bar" style="--bi:2"></div><div class="vc-bar" style="--bi:3"></div>
+            <div class="vc-bar" style="--bi:4"></div><div class="vc-bar" style="--bi:5"></div>
+            <div class="vc-bar" style="--bi:6"></div><div class="vc-bar" style="--bi:7"></div>
+            <div class="vc-bar" style="--bi:8"></div><div class="vc-bar" style="--bi:9"></div>
+            <div class="vc-bar" style="--bi:10"></div><div class="vc-bar" style="--bi:11"></div>
+            <div class="vc-bar" style="--bi:12"></div><div class="vc-bar" style="--bi:13"></div>
+            <div class="vc-bar" style="--bi:14"></div><div class="vc-bar" style="--bi:15"></div>
+          </div>
+        </div>
+
+        <!-- Mic zone -->
+        <div class="mic-zone">
+          <div class="mic-field" id="micField">
+            <div class="mf-ring mf-r1"></div>
+            <div class="mf-ring mf-r2"></div>
+            <button class="mic-core" id="micBtn" aria-label="Voice input">
+              <span class="mc-icon" id="mcIcon">◎</span>
+            </button>
+          </div>
+          <div class="mic-legend" id="micLegend">TAP TO SPEAK</div>
+        </div>
+
+        <!-- AI speaking bar -->
+        <div class="ai-speak-bar hidden" id="aiSpeakBar">
+          <div class="asb-wave">
+            <span></span><span></span><span></span><span></span><span></span>
+            <span></span><span></span><span></span><span></span><span></span>
+          </div>
+          <span class="asb-label">Responding</span>
+          <button class="asb-stop" id="interruptBtn">◼</button>
+        </div>
+
+        <!-- Transcript flash -->
+        <div class="transcript-flash hidden" id="transcriptBox">
+          <div class="tf-label">YOU SAID</div>
+          <div class="tf-text" id="transcriptText"></div>
+        </div>
+
+        <!-- Suggestion chips -->
+        <div class="suggestion-chips" id="suggestionChips">
+          <div class="chip-label">Try saying…</div>
+          <div class="chips-row" id="chipsRow"></div>
+        </div>
+
+        <!-- Error bar -->
+        <div class="error-bar hidden" id="errorBanner">
+          <span id="errorText">Offline mode active</span>
+          <button onclick="this.parentElement.classList.add('hidden')">✕</button>
+        </div>
+
+      </section>
+
+      <!-- RIGHT: Chat Interface -->
+      <aside class="panel panel-right glass-deep" id="chatPanel">
+        <div class="chat-top">
+          <span class="section-label">CONVERSATION</span>
+          <div class="chat-actions">
+            <button class="icon-btn" id="ttsToggle" title="Voice">◎</button>
+            <button class="icon-btn" id="clearChatBtn" title="Clear">✕</button>
+          </div>
+        </div>
+
+        <div class="chat-stream" id="chatMessages">
+          <div class="msg msg-ai">
+            <div class="msg-avi">◈</div>
+            <div class="msg-body">
+              <div class="msg-text">Hello. I'm <strong>MySoul AI</strong> — your emotional intelligence companion. I sense, understand, and grow with you. How are you feeling right now?</div>
+              <div class="msg-foot"><span class="msg-ts">Now</span></div>
+            </div>
+          </div>
+        </div>
+
+        <div class="chat-composer">
+          <input class="composer-input" id="chatInput" type="text"
+            placeholder="Share what's moving through you…" autocomplete="off"/>
+          <button class="composer-send" id="sendBtn">
+            <span>↑</span>
+          </button>
+        </div>
+      </aside>
+
+    </div><!-- /home-grid -->
+    <div class="floating-thoughts" id="floatingThoughts"></div>
+  </div><!-- /view-home -->
+
+  <!-- ════════════════════════
+       VIEW: INSIGHTS
+  ════════════════════════ -->
+  <div class="view" id="view-insights">
+    <div class="insights-grid">
+
+      <!-- Mood wave -->
+      <div class="card glass-card span2" id="cardMood">
+        <div class="card-head">
+          <span class="card-title">MOOD WAVE</span>
+          <div class="period-btns">
+            <button class="period active" data-period="week">7D</button>
+            <button class="period" data-period="month">30D</button>
+          </div>
+        </div>
+        <div class="chart-area"><canvas id="moodChart"></canvas></div>
+        <div class="chart-glow-line"></div>
+      </div>
+
+      <!-- Emotion ring -->
+      <div class="card glass-card" id="cardEmoDist">
+        <div class="card-head"><span class="card-title">EMOTION MIX</span></div>
+        <div class="chart-area chart-ring"><canvas id="emotionMixChart"></canvas></div>
+      </div>
+
+      <!-- Best day -->
+      <div class="card glass-card" id="cardBestDay">
+        <div class="card-head"><span class="card-title">PEAK DAY</span></div>
+        <div class="bestday-display">
+          <div class="bd-sun">☀</div>
+          <div class="bd-day" id="bestDayName">–</div>
+          <div class="bd-desc">Highest positivity this week</div>
+        </div>
+      </div>
+
+      <!-- Activity vs mood -->
+      <div class="card glass-card span2" id="cardActivity">
+        <div class="card-head"><span class="card-title">ACTIVITY vs MOOD</span></div>
+        <div class="chart-area"><canvas id="activityChart"></canvas></div>
+      </div>
+
+      <!-- Stress gauge -->
+      <div class="card glass-card" id="cardStress">
+        <div class="card-head"><span class="card-title">STRESS INDEX</span></div>
+        <div class="stress-ring-wrap">
+          <svg viewBox="0 0 120 120" class="stress-svg">
+            <circle class="sr-track" cx="60" cy="60" r="48" fill="none" stroke-width="7"/>
+            <circle class="sr-fill" id="stressArc" cx="60" cy="60" r="48" fill="none" stroke-width="7"
+              stroke-linecap="round" stroke-dasharray="301" stroke-dashoffset="150"
+              transform="rotate(-90 60 60)"/>
+            <text x="60" y="58" text-anchor="middle" class="sr-pct" id="stressPct">–</text>
+            <text x="60" y="74" text-anchor="middle" class="sr-label">STRESS</text>
+          </svg>
+          <div class="stress-insight" id="stressInsight">Chat to begin tracking</div>
+        </div>
+      </div>
+
+      <!-- Emotion calendar — PROPER CALENDAR -->
+      <div class="card glass-card span3" id="cardCal">
+        <div class="card-head">
+          <span class="card-title">EMOTION CALENDAR</span>
+          <div class="cal-nav">
+            <button class="cal-nav-btn" id="calPrev">‹</button>
+            <span class="cal-month-label" id="calMonthLabel">–</span>
+            <button class="cal-nav-btn" id="calNext">›</button>
+          </div>
+        </div>
+        <div class="emo-cal-wrap">
+          <div class="cal-weekdays">
+            <span>Sun</span><span>Mon</span><span>Tue</span><span>Wed</span><span>Thu</span><span>Fri</span><span>Sat</span>
+          </div>
+          <div class="emo-cal" id="emotionCalendar"></div>
+        </div>
+      </div>
+
+    </div><!-- /insights-grid -->
+  </div><!-- /view-insights -->
+
+  <!-- ════════════════════════
+       VIEW: WELLNESS
+  ════════════════════════ -->
+  <div class="view" id="view-wellness">
+    <div class="wellness-shell">
+      <div class="w-tabs">
+        <button class="wtab active" data-wtab="breathe">🫁 Breathe</button>
+        <button class="wtab" data-wtab="journal">✍ Journal</button>
+        <button class="wtab" data-wtab="inspire">✦ Inspire</button>
+        <button class="wtab" data-wtab="health">⚡ Health</button>
+        <button class="wtab" data-wtab="color">🎨 Color</button>
+        <button class="wtab" data-wtab="meditate">☯ Meditate</button>
+        <button class="wtab" data-wtab="stressgame">🎮 De-Stress</button>
+        <button class="wtab" data-wtab="nameyourai">✨ Name Your AI</button>
+      </div>
+
+      <!-- BREATHE -->
+      <div class="wpanel glass-deep active" id="wpanel-breathe">
+        <h2 class="wp-title">Breathing Space</h2>
+        <div class="breathe-stage">
+          <div class="breathe-field" id="breatheField">
+            <div class="bf-ring bf-r1"></div>
+            <div class="bf-ring bf-r2"></div>
+            <div class="bf-ring bf-r3"></div>
+            <div class="bf-core" id="bfCore">
+              <span class="bf-count" id="bfCount">–</span>
+            </div>
+          </div>
+          <div class="breathe-word" id="breatheWord">Press Start</div>
+          <div class="breathe-guide" id="breatheGuide">Choose your rhythm below</div>
+        </div>
+        <div class="breathe-controls">
+          <select class="glass-select" id="breatheMode">
+            <option value="478">4-7-8  Calm</option>
+            <option value="box">Box Breathing</option>
+            <option value="deep">Deep Release</option>
+          </select>
+          <button class="soul-btn" id="breatheStart">Begin</button>
+        </div>
+      </div>
+
+      <!-- JOURNAL -->
+      <div class="wpanel glass-deep hidden" id="wpanel-journal">
+        <h2 class="wp-title">Gratitude Journal</h2>
+        <div class="journal-card glass-card">
+          <div class="j-prompt" id="jPrompt">What brought you a moment of peace today?</div>
+          <textarea class="j-area" id="journalInput" placeholder="Write freely… this space is only yours."></textarea>
+        </div>
+        <div class="j-foot">
+          <span class="j-count" id="journalCount">0 entries</span>
+          <button class="soul-btn" id="journalSave">Save ✦</button>
+        </div>
+        <div class="j-entries" id="journalEntries"></div>
+      </div>
+
+      <!-- INSPIRE -->
+      <div class="wpanel glass-deep hidden" id="wpanel-inspire">
+        <h2 class="wp-title">Soul Inspiration</h2>
+        <div class="inspire-stage" id="inspireStage">
+          <div class="is-glyph">✦</div>
+          <div class="is-quote" id="isQuote">Loading…</div>
+          <div class="is-author" id="isAuthor"></div>
+        </div>
+        <div class="inspire-tags" id="inspireTags"></div>
+        <button class="soul-btn" id="inspireNext">Next Insight →</button>
+      </div>
+
+      <!-- HEALTH -->
+      <div class="wpanel glass-deep hidden" id="wpanel-health">
+        <h2 class="wp-title">Mind & Body</h2>
+        <div class="health-cards">
+          <div class="hcard glass-card" data-t="eat">
+            <div class="hc-icon">🌿</div>
+            <div class="hc-label">Nourish</div>
+            <div class="hc-tip" id="eatTip">Loading…</div>
+          </div>
+          <div class="hcard glass-card" data-t="move">
+            <div class="hc-icon">⚡</div>
+            <div class="hc-label">Move</div>
+            <div class="hc-tip" id="moveTip">Loading…</div>
+          </div>
+          <div class="hcard glass-card" data-t="stretch">
+            <div class="hc-icon">🌊</div>
+            <div class="hc-label">Stretch</div>
+            <div class="hc-tip" id="stretchTip">Loading…</div>
+          </div>
+          <div class="hcard glass-card" data-t="sleep">
+            <div class="hc-icon">🌙</div>
+            <div class="hc-label">Rest</div>
+            <div class="hc-tip" id="sleepTip">Loading…</div>
+          </div>
+        </div>
+        <button class="soul-btn" id="healthRefresh">Refresh ↺</button>
+      </div>
+
+      <!-- COLOR THERAPY -->
+      <div class="wpanel glass-deep hidden" id="wpanel-color">
+        <h2 class="wp-title">Color Therapy</h2>
+        <div class="color-studio">
+          <div class="cs-toolbar">
+            <div class="cs-swatches" id="colorSwatches"></div>
+            <div class="cs-brushes">
+              <button class="cs-sz active" data-s="5">·</button>
+              <button class="cs-sz" data-s="12">○</button>
+              <button class="cs-sz" data-s="24">●</button>
+            </div>
+            <button class="soul-btn-sm" id="colorErase">Erase</button>
+            <button class="soul-btn-sm" id="colorClear">Clear</button>
+            <button class="soul-btn-sm" id="colorSave">Save</button>
+          </div>
+          <canvas class="cs-canvas" id="colorCanvas"></canvas>
+        </div>
+      </div>
+
+      <!-- MEDITATE -->
+      <div class="wpanel glass-deep hidden" id="wpanel-meditate">
+        <h2 class="wp-title">Meditation</h2>
+        <div class="med-stage">
+          <div class="med-orb" id="medOrb">
+            <div class="mo-ring mo-r1"></div>
+            <div class="mo-ring mo-r2"></div>
+            <div class="mo-ring mo-r3"></div>
+            <div class="mo-core">☯</div>
+          </div>
+          <div class="med-time" id="medTimer">00:00</div>
+          <div class="med-word" id="medWord">Find your center</div>
+        </div>
+        <div class="med-controls">
+          <select class="glass-select" id="medDuration">
+            <option value="5">5 min</option>
+            <option value="10">10 min</option>
+            <option value="20">20 min</option>
+          </select>
+          <button class="soul-btn" id="medStart">Begin Journey</button>
+        </div>
+      </div>
+
+      <!-- DE-STRESS GAMES -->
+      <div class="wpanel glass-deep hidden" id="wpanel-stressgame">
+        <h2 class="wp-title">De-Stress Zone</h2>
+        <div class="sg-mode-bar">
+          <button class="sg-mode-btn active" data-sgmode="bubbles">🫧 Pop Bubbles</button>
+          <button class="sg-mode-btn" data-sgmode="zen">🪨 Zen Garden</button>
+          <button class="sg-mode-btn" data-sgmode="breathball">🌀 Breath Ball</button>
+        </div>
+
+        <!-- BUBBLE POP GAME -->
+        <div class="sg-game active" id="sg-bubbles">
+          <div class="sg-stats">
+            <span>Popped: <strong id="bubbleScore">0</strong></span>
+            <span id="bubbleCombo" class="sg-combo hidden">🔥 Combo x<strong id="bubbleComboNum">1</strong></span>
+            <span>Best: <strong id="bubbleBest">0</strong></span>
+          </div>
+          <div class="sg-arena" id="bubbleArena">
+            <div class="sg-start-msg" id="bubbleStartMsg">Tap the bubbles to pop them!<br><small>Pop fast for combos 🔥</small></div>
+          </div>
+          <div class="sg-controls">
+            <button class="soul-btn" id="bubbleStartBtn">Start Popping</button>
+            <select class="glass-select" id="bubbleSpeed">
+              <option value="normal">Normal</option>
+              <option value="slow">Slow & Chill</option>
+              <option value="fast">Fast & Furious</option>
+            </select>
+          </div>
+        </div>
+
+        <!-- ZEN GARDEN -->
+        <div class="sg-game" id="sg-zen">
+          <div class="sg-zen-tools">
+            <button class="sg-tool active" data-zentool="rake" title="Rake">〰</button>
+            <button class="sg-tool" data-zentool="stone" title="Add Stone">⬤</button>
+            <button class="sg-tool" data-zentool="erase" title="Erase">⊘</button>
+            <input type="color" id="zenColor" value="#a0c8ff" class="sg-color-pick" title="Color">
+            <button class="sg-tool" data-zentool="clear" title="Clear All" id="zenClearBtn">🗑</button>
+          </div>
+          <canvas class="sg-canvas" id="zenCanvas"></canvas>
+          <p class="sg-hint">Draw slowly. Let your mind empty. There is no right or wrong. 🪨</p>
+        </div>
+
+        <!-- BREATH BALL -->
+        <div class="sg-game" id="sg-breathball">
+          <div class="sg-bb-wrap">
+            <div class="sg-bb-ring sg-bb-r3"></div>
+            <div class="sg-bb-ring sg-bb-r2"></div>
+            <div class="sg-bb-ring sg-bb-r1"></div>
+            <div class="sg-bb-ball" id="bbBall">
+              <span id="bbLabel">Tap to begin</span>
+            </div>
+          </div>
+          <div class="sg-bb-phase" id="bbPhase">Follow the ball</div>
+          <div class="sg-bb-counter">
+            <span>Cycles: <strong id="bbCycles">0</strong></span>
+            <span id="bbTimer">0:00</span>
+          </div>
+          <div class="sg-controls">
+            <button class="soul-btn" id="bbStartBtn">Begin</button>
+            <select class="glass-select" id="bbPattern">
+              <option value="478">4-7-8 (Sleep)</option>
+              <option value="box">Box (Focus)</option>
+              <option value="calm">3-6 (Calm)</option>
+            </select>
+          </div>
+        </div>
+      </div>
+
+
+      <!-- ══ NAME YOUR AI PANEL ══ -->
+      <div class="wpanel glass-deep hidden" id="wpanel-nameyourai">
+        <div style="max-width:420px;margin:0 auto;padding:8px 0;">
+          <div style="font-family:'Syne',sans-serif;font-size:.58rem;letter-spacing:.32em;color:rgba(0,200,255,.55);text-transform:uppercase;margin-bottom:6px;">Personalise Your Companion</div>
+          <div style="font-family:'Syne',sans-serif;font-size:1.25rem;font-weight:700;color:#fff;margin-bottom:4px;">Name Your AI</div>
+          <div style="font-size:.8rem;color:rgba(180,210,255,.55);margin-bottom:22px;line-height:1.6;">
+            Give your AI a personal nickname — like <em>Storm</em>, <em>Aria</em>, or <em>Nova</em>. The app stays <strong style="color:rgba(180,210,255,.8);">MySoul AI</strong>, but your AI will introduce itself by this name in conversation.
+          </div>
+
+          <!-- current nickname display -->
+          <div style="display:flex;align-items:center;gap:10px;margin-bottom:20px;padding:14px 16px;background:rgba(0,200,255,.06);border:1px solid rgba(0,200,255,.15);border-radius:14px;">
+            <span style="font-size:1.5rem;">🤖</span>
+            <div>
+              <div style="font-size:.65rem;letter-spacing:.2em;color:rgba(0,200,255,.5);font-family:'Syne',sans-serif;text-transform:uppercase;">Current Nickname</div>
+              <div id="currentNickDisplay" style="font-family:'Syne',sans-serif;font-size:1rem;font-weight:700;color:var(--ec);">None set</div>
+            </div>
+          </div>
+
+          <!-- input row -->
+          <div style="display:flex;gap:10px;margin-bottom:14px;">
+            <input id="aiNickInput" maxlength="30" placeholder="e.g. Aria, Storm, Nova, Echo…" autocomplete="off"
+              style="flex:1;background:rgba(255,255,255,.04);border:1px solid rgba(0,200,255,.22);border-radius:12px;padding:12px 16px;color:#fff;font-family:'Syne',sans-serif;font-size:.95rem;outline:none;transition:border-color .2s;"
+              onfocus="this.style.borderColor='rgba(0,200,255,.7)'" onblur="this.style.borderColor='rgba(0,200,255,.22)'"/>
+            <button id="aiNickSaveBtn"
+              style="padding:12px 22px;border-radius:12px;background:rgba(0,200,255,.14);border:1px solid rgba(0,200,255,.38);color:#00c8ff;font-family:'Syne',sans-serif;font-size:.85rem;letter-spacing:.06em;cursor:pointer;transition:all .2s;white-space:nowrap;"
+              onmouseover="this.style.background='rgba(0,200,255,.28)'" onmouseout="this.style.background='rgba(0,200,255,.14)'">
+              Save ✓
+            </button>
+          </div>
+
+          <!-- clear button -->
+          <button id="aiNickClearBtn"
+            style="background:none;border:1px solid rgba(180,210,255,.12);border-radius:10px;padding:8px 16px;color:rgba(180,210,255,.4);font-size:.75rem;font-family:'Syne',sans-serif;cursor:pointer;transition:all .2s;"
+            onmouseover="this.style.borderColor='rgba(180,210,255,.3)';this.style.color='rgba(180,210,255,.7)'"
+            onmouseout="this.style.borderColor='rgba(180,210,255,.12)';this.style.color='rgba(180,210,255,.4)'">
+            Remove nickname
+          </button>
+
+          <!-- feedback msg -->
+          <div id="aiNickFeedback" style="margin-top:14px;min-height:22px;font-size:.78rem;font-family:'Syne',sans-serif;color:rgba(56,240,152,.8);opacity:0;transition:opacity .4s;"></div>
+
+          <!-- note -->
+          <div style="margin-top:24px;padding:14px;background:rgba(56,240,152,.04);border:1px solid rgba(56,240,152,.12);border-radius:12px;font-size:.75rem;color:rgba(180,210,255,.45);line-height:1.7;">
+            💡 This nickname is stored only on your device. The app brand <strong style="color:rgba(180,210,255,.65);">MySoul AI</strong> never changes — only your personal companion's greeting name does.
+          </div>
+        </div>
+      </div>
+
+    </div><!-- /wellness-shell -->
+
+  </div><!-- /view-wellness -->
+
+  <!-- ════════════════════════
+       VIEW: UNIVERSE
+  ════════════════════════ -->
+  <div class="view" id="view-universe">
+    <canvas id="universeCanvas" class="universe-canvas"></canvas>
+    <div class="universe-content">
+      <div class="uc-title">You are made of stardust</div>
+      <div class="uc-sub">Every emotion ripples through the cosmos</div>
+      <div class="uc-quote" id="universeQuote"></div>
+      <button class="universe-btn" onclick="document.querySelector('[data-view=home]').click()">← Return</button>
+    </div>
+  </div>
+
+</div><!-- /app -->
+
+<!-- ═══════ SOS / DISTRESS OVERLAY ═══════ -->
+<div id="sosOverlay" class="sos-overlay hidden">
+  <div class="sos-backdrop"></div>
+  <div class="sos-card">
+    <div class="sos-pulse-ring"></div>
+    <div class="sos-pulse-ring sos-r2"></div>
+    <div class="sos-icon">🆘</div>
+    <h2 class="sos-title">I noticed you might need support</h2>
+    <p class="sos-body">It sounds like you're going through something really difficult right now. You're not alone — I'm here with you.</p>
+    <div class="sos-actions">
+      <button class="sos-btn sos-btn-alert" id="sosAlertFamily">Alert a Family Member</button>
+      <button class="sos-btn sos-btn-breathe" id="sosBreathe">Start Breathing Exercise</button>
+      <button class="sos-btn sos-btn-dismiss" id="sosDismiss">I'm okay, continue talking</button>
+    </div>
+    <div class="sos-helpline">
+      <span class="sos-help-label">HELPLINE</span>
+      <span class="sos-help-num">iCall: 9152987821</span>
+      <span class="sos-help-label">• 24/7 • Free & Confidential</span>
+    </div>
+    <div class="sos-alert-status hidden" id="sosAlertStatus"></div>
+  </div>
+</div>
+
+<!-- ═══════ EMOTION HINT BAR ═══════ -->
+<div id="hintBar" class="hint-bar hidden">
+  <div class="hint-icon">💡</div>
+  <div class="hint-text" id="hintText">I'm here to help</div>
+  <button class="hint-action" id="hintAction">Try it</button>
+  <button class="hint-close" id="hintClose">✕</button>
+</div>
+
+<!-- ═══════ FAMILY ALERT TOAST ═══════ -->
+<div id="alertToast" class="alert-toast hidden">
+  <div class="at-icon">📨</div>
+  <div class="at-text" id="alertToastText">Alert sent</div>
+</div>
+
+<div id="rippleRoot"></div>
+
+<!-- Fixed: JS paths now reference scripts/ subfolder, in correct dependency order -->
+<script src="scripts/particles.js"></script>
+<script src="scripts/soul-core.js"></script>
+<script src="scripts/voice.js"></script>
+<script src="scripts/ui-layer-manager.js"></script>
+<script src="scripts/chat.js"></script>
+<script src="scripts/voice-ui.js"></script>
+<script src="scripts/panels.js"></script>
+<!-- auto-voice-trigger removed: wake word feature not supported reliably across browsers -->
+<script src="modules/soul-features.js"></script>
+<script>
+/* ═══════════════════════════════════════════
+   MySoul — De-Stress Games
+   ─── 1. Bubble Pop  2. Zen Garden  3. Breath Ball
+═══════════════════════════════════════════ */
+(function() {
+  'use strict';
+
+  /* ── Tab switching ── */
+  document.querySelectorAll('.sg-mode-btn').forEach(btn => {
+    btn.addEventListener('click', () => {
+      document.querySelectorAll('.sg-mode-btn').forEach(b => b.classList.remove('active'));
+      document.querySelectorAll('.sg-game').forEach(g => g.classList.remove('active'));
+      btn.classList.add('active');
+      const mode = btn.dataset.sgmode;
+      document.getElementById('sg-' + mode)?.classList.add('active');
+      if (mode === 'zen') setTimeout(initZen, 30);
+      if (mode === 'breathball') {
+        const ball = document.getElementById('bbBall');
+        if (ball) { ball.className = 'sg-bb-ball'; document.getElementById('bbLabel').textContent = 'Tap to begin'; }
+      }
+    });
+  });
+
+  /* ══════════════════════════════════════
+     1. BUBBLE POP
+  ══════════════════════════════════════ */
+  let bubbles = [], bubbleScore = 0, bubbleBest = 0, bubbleTimer = null;
+  let bubbleRunning = false, comboTimer = null, combo = 0;
+  const EMOJIS = ['😤','😠','😰','😟','💢','😖','😩','😣','😫','🤯'];
+  const COLORS = [
+    'rgba(0,200,255,.55)','rgba(168,85,247,.55)','rgba(255,100,150,.5)',
+    'rgba(50,200,120,.5)','rgba(255,180,50,.5)','rgba(100,180,255,.5)'
+  ];
+
+  document.getElementById('bubbleStartBtn')?.addEventListener('click', () => {
+    if (bubbleRunning) { stopBubbles(); } else { startBubbles(); }
+  });
+
+  function startBubbles() {
+    bubbleRunning = true;
+    bubbleScore = 0;
+    combo = 0;
+    document.getElementById('bubbleScore').textContent = '0';
+    document.getElementById('bubbleCombo')?.classList.add('hidden');
+    document.getElementById('bubbleStartBtn').textContent = 'Stop';
+    document.getElementById('bubbleStartMsg')?.remove();
+    const arena = document.getElementById('bubbleArena');
+    // clear old
+    arena.querySelectorAll('.sg-bubble').forEach(b => b.remove());
+    const speed = document.getElementById('bubbleSpeed')?.value || 'normal';
+    const interval = speed === 'slow' ? 1400 : speed === 'fast' ? 550 : 900;
+    bubbleTimer = setInterval(() => spawnBubble(arena), interval);
+    spawnBubble(arena);
+  }
+
+  function stopBubbles() {
+    bubbleRunning = false;
+    clearInterval(bubbleTimer);
+    document.getElementById('bubbleStartBtn').textContent = 'Start Popping';
+    if (bubbleScore > bubbleBest) {
+      bubbleBest = bubbleScore;
+      document.getElementById('bubbleBest').textContent = bubbleBest;
+    }
+  }
+
+  function spawnBubble(arena) {
+    const size = 44 + Math.random() * 36;
+    const aW = arena.offsetWidth - size - 10;
+    const aH = arena.offsetHeight - size - 10;
+    const b = document.createElement('div');
+    b.className = 'sg-bubble';
+    b.style.cssText = `
+      width:${size}px;height:${size}px;
+      left:${8 + Math.random() * aW}px;
+      top:${8 + Math.random() * aH}px;
+      background:${COLORS[Math.floor(Math.random()*COLORS.length)]};
+      border:1px solid rgba(255,255,255,.25);
+      animation-duration:${2 + Math.random()*2}s;
+      animation-delay:${Math.random()*.5}s;
+      box-shadow:0 0 ${8+Math.random()*10}px rgba(0,200,255,.3);
+    `;
+    b.textContent = EMOJIS[Math.floor(Math.random()*EMOJIS.length)];
+    b.addEventListener('click', () => popBubble(b));
+    b.addEventListener('touchstart', (e) => { e.preventDefault(); popBubble(b); }, {passive:false});
+    arena.appendChild(b);
+    // auto-remove after 5s if not popped
+    setTimeout(() => { if (b.parentNode) b.remove(); }, 5500);
+  }
+
+  function popBubble(b) {
+    if (!bubbleRunning) return;
+    b.classList.add('popped');
+    clearTimeout(comboTimer);
+    combo++;
+    bubbleScore += combo;
+    document.getElementById('bubbleScore').textContent = bubbleScore;
+    const comboEl = document.getElementById('bubbleCombo');
+    if (combo > 1) {
+      comboEl?.classList.remove('hidden');
+      document.getElementById('bubbleComboNum').textContent = combo;
+    }
+    comboTimer = setTimeout(() => {
+      combo = 0;
+      comboEl?.classList.add('hidden');
+    }, 1200);
+    setTimeout(() => b.remove(), 320);
+  }
+
+  /* ══════════════════════════════════════
+     2. ZEN GARDEN
+  ══════════════════════════════════════ */
+  let zenTool = 'rake', zenDrawing = false, zenLastX = 0, zenLastY = 0;
+  let zenCtx = null, zenColor = '#a0c8ff';
+
+  function initZen() {
+    const canvas = document.getElementById('zenCanvas');
+    if (!canvas) return;
+    // Size canvas to its rendered size
+    const w = canvas.parentElement?.offsetWidth || 560;
+    canvas.width = Math.min(w - 16, 600);
+    canvas.height = 300;
+    if (canvas._zenInit) { return; }
+    canvas._zenInit = true;
+    zenCtx = canvas.getContext('2d');
+    zenCtx.fillStyle = 'rgba(0,15,35,1)';
+    zenCtx.fillRect(0, 0, canvas.width, canvas.height);
+    drawZenBase();
+
+    // Tool buttons
+    document.querySelectorAll('.sg-tool[data-zentool]').forEach(t => {
+      t.addEventListener('click', () => {
+        if (t.dataset.zentool === 'clear') { clearZen(); return; }
+        document.querySelectorAll('.sg-tool[data-zentool]').forEach(x => x.classList.remove('active'));
+        t.classList.add('active');
+        zenTool = t.dataset.zentool;
+      });
+    });
+    document.getElementById('zenColor')?.addEventListener('input', e => { zenColor = e.target.value; });
+    document.getElementById('zenClearBtn')?.addEventListener('click', clearZen);
+
+    // Mouse
+    canvas.addEventListener('mousedown', e => { zenDrawing = true; getZenPos(canvas, e); });
+    canvas.addEventListener('mousemove', e => { if (zenDrawing) zenDraw(canvas, e); });
+    canvas.addEventListener('mouseup',   () => zenDrawing = false);
+    canvas.addEventListener('mouseleave',() => zenDrawing = false);
+    // Touch
+    canvas.addEventListener('touchstart', e => { e.preventDefault(); zenDrawing = true; getZenPos(canvas, e.touches[0]); }, {passive:false});
+    canvas.addEventListener('touchmove',  e => { e.preventDefault(); if (zenDrawing) zenDraw(canvas, e.touches[0]); }, {passive:false});
+    canvas.addEventListener('touchend',   () => zenDrawing = false);
+  }
+
+  function getZenPos(canvas, e) {
+    const r = canvas.getBoundingClientRect();
+    const scaleX = canvas.width / r.width;
+    const scaleY = canvas.height / r.height;
+    zenLastX = (e.clientX - r.left) * scaleX;
+    zenLastY = (e.clientY - r.top) * scaleY;
+  }
+
+  function zenDraw(canvas, e) {
+    const r = canvas.getBoundingClientRect();
+    const scaleX = canvas.width / r.width;
+    const scaleY = canvas.height / r.height;
+    const x = (e.clientX - r.left) * scaleX;
+    const y = (e.clientY - r.top) * scaleY;
+    const ctx = zenCtx;
+
+    if (zenTool === 'rake') {
+      ctx.strokeStyle = zenColor;
+      ctx.lineWidth = 1.5;
+      ctx.globalAlpha = 0.55;
+      ctx.lineCap = 'round';
+      for (let i = -2; i <= 2; i++) {
+        ctx.beginPath();
+        ctx.moveTo(zenLastX + i*6, zenLastY + i*6);
+        ctx.lineTo(x + i*6, y + i*6);
+        ctx.stroke();
+      }
+      ctx.globalAlpha = 1;
+    } else if (zenTool === 'stone') {
+      ctx.fillStyle = zenColor;
+      ctx.globalAlpha = 0.7;
+      ctx.beginPath();
+      ctx.arc(x, y, 10 + Math.random()*8, 0, Math.PI*2);
+      ctx.fill();
+      ctx.globalAlpha = 1;
+    } else if (zenTool === 'erase') {
+      ctx.clearRect(x-16, y-16, 32, 32);
+      ctx.fillStyle = 'rgba(0,15,35,1)';
+      ctx.fillRect(x-16, y-16, 32, 32);
+    }
+    zenLastX = x; zenLastY = y;
+  }
+
+  function drawZenBase() {
+    const ctx = zenCtx;
+    const w = 600, h = 320;
+    // subtle sand texture
+    ctx.fillStyle = 'rgba(140,120,80,.04)';
+    for (let i = 0; i < 800; i++) {
+      ctx.fillRect(Math.random()*w, Math.random()*h, 1, 1);
+    }
+  }
+
+  function clearZen() {
+    const canvas = document.getElementById('zenCanvas');
+    if (!zenCtx) return;
+    zenCtx.fillStyle = 'rgba(0,15,35,1)';
+    zenCtx.fillRect(0, 0, canvas.width, canvas.height);
+    drawZenBase();
+  }
+
+  /* ══════════════════════════════════════
+     3. BREATH BALL
+  ══════════════════════════════════════ */
+  let bbRunning = false, bbPhaseTimer = null, bbCycles = 0, bbSeconds = 0, bbClockTimer = null;
+  const BB_PATTERNS = {
+    '478': [{phase:'Inhale',dur:4000,cls:'inhale'},{phase:'Hold',dur:7000,cls:'hold'},{phase:'Exhale',dur:8000,cls:'exhale'}],
+    'box':  [{phase:'Inhale',dur:4000,cls:'inhale'},{phase:'Hold',dur:4000,cls:'hold'},{phase:'Exhale',dur:4000,cls:'exhale'},{phase:'Hold',dur:4000,cls:'hold'}],
+    'calm': [{phase:'Inhale',dur:3000,cls:'inhale'},{phase:'Exhale',dur:6000,cls:'exhale'}],
+  };
+
+  document.getElementById('bbStartBtn')?.addEventListener('click', () => {
+    if (bbRunning) stopBreathBall(); else startBreathBall();
+  });
+
+  function startBreathBall() {
+    bbRunning = true; bbCycles = 0; bbSeconds = 0;
+    document.getElementById('bbStartBtn').textContent = 'Stop';
+    document.getElementById('bbCycles').textContent = '0';
+    document.getElementById('bbTimer').textContent = '0:00';
+    bbClockTimer = setInterval(() => {
+      bbSeconds++;
+      const m = Math.floor(bbSeconds/60), s = bbSeconds%60;
+      document.getElementById('bbTimer').textContent = m+':'+(s<10?'0':'')+s;
+    }, 1000);
+    runBreathPhase(0);
+  }
+
+  function stopBreathBall() {
+    bbRunning = false;
+    clearTimeout(bbPhaseTimer);
+    clearInterval(bbClockTimer);
+    document.getElementById('bbStartBtn').textContent = 'Begin';
+    document.getElementById('bbPhase').textContent = 'Well done 🌿';
+    const ball = document.getElementById('bbBall');
+    ball.className = 'sg-bb-ball';
+    document.getElementById('bbLabel').textContent = 'Tap to begin';
+  }
+
+  function runBreathPhase(idx) {
+    if (!bbRunning) return;
+    const pattern = BB_PATTERNS[document.getElementById('bbPattern')?.value || '478'];
+    const step = pattern[idx % pattern.length];
+    const ball = document.getElementById('bbBall');
+    ball.className = 'sg-bb-ball';
+    ball.style.setProperty('--bb-dur', (step.dur/1000)+'s');
+    document.getElementById('bbLabel').textContent = step.phase;
+    document.getElementById('bbPhase').textContent = step.phase + '…';
+    requestAnimationFrame(() => { ball.classList.add(step.cls); });
+    if (idx > 0 && idx % pattern.length === 0) {
+      bbCycles++;
+      document.getElementById('bbCycles').textContent = bbCycles;
+    }
+    bbPhaseTimer = setTimeout(() => runBreathPhase(idx + 1), step.dur);
+  }
+
+})();
+</script>
+
+<!-- ═══════ MySoul AI v6 — SOS, Hints, Setup Integration ═══════ -->
+<script>
+(function() {
+  'use strict';
+
+  /* ── Setup integration: show AI name in header ── */
+  function initSetup() {
+    const setup = JSON.parse(localStorage.getItem('ms_setup') || '{}');
+    const aiName = setup.ai_name || 'MySoul';
+    const userName = setup.user_name || '';
+    const lang = setup.language || 'en';
+
+    // Show custom AI name in brand area
+
+    // Personalize greeting message
+    if(setup.user_name) {
+      const firstMsg = document.querySelector('.msg-ai .msg-text');
+      if(firstMsg) {
+        firstMsg.innerHTML = `Hello, <strong>${setup.user_name}</strong>! I'm <strong>${aiName}</strong> — your emotional intelligence companion. I sense, understand, and grow with you. How are you feeling right now?`;
+      }
+    }
+
+    // Add language flag to chat input
+    const composer = document.querySelector('.chat-composer');
+    if(composer) {
+      const flags = {en:'🇬🇧',ta:'🇮🇳',hi:'🇮🇳',te:'🇮🇳',ml:'🇮🇳',kn:'🇮🇳',fr:'🇫🇷',es:'🇪🇸',de:'🇩🇪',zh:'🇨🇳',ja:'🇯🇵',ar:'🇸🇦'};
+      const flag = flags[lang] || '🌐';
+      const flagEl = document.createElement('span');
+      flagEl.className = 'lang-flag-pill';
+      flagEl.textContent = flag;
+      flagEl.title = 'Language: ' + lang.toUpperCase();
+      composer.style.position = 'relative';
+      composer.appendChild(flagEl);
+    }
+
+    // If no setup, show banner
+    if(!setup.user_name) {
+      const banner = document.createElement('div');
+      banner.className = 'setup-banner';
+      banner.innerHTML = `✨ First time? <a href="pages/onboarding.html" style="margin-left:6px">Personalize your experience →</a>`;
+      document.getElementById('app')?.appendChild(banner);
+      setTimeout(()=>banner.remove(), 8000);
+    }
+  }
+
+  /* ── SOS Overlay ── */
+  const sosOverlay = document.getElementById('sosOverlay');
+  let sosVisible = false;
+  let currentHints = [];
+  let hintIdx = 0;
+
+  function showSOS(data) {
+    if(sosVisible) return;
+    sosVisible = true;
+    sosOverlay?.classList.remove('hidden');
+    document.getElementById('sosAlertStatus')?.classList.add('hidden');
+  }
+
+  function hideSOS() {
+    sosVisible = false;
+    sosOverlay?.classList.add('hidden');
+  }
+
+  document.getElementById('sosDismiss')?.addEventListener('click', hideSOS);
+
+  document.getElementById('sosAlertFamily')?.addEventListener('click', async () => {
+    const btn = document.getElementById('sosAlertFamily');
+    const status = document.getElementById('sosAlertStatus');
+    btn.textContent = '⏳ Sending alert…';
+    btn.disabled = true;
+    const ok = await SoulCore.sendFamilyAlert('User may need support — detected distress.');
+    status?.classList.remove('hidden', 'error');
+    if(ok) {
+      status.textContent = '✓ Family member notified successfully.';
+      status.classList.remove('error');
+      SoulCore.SFX.success();
+      // Show toast
+      showToast('📨 Family alert sent successfully');
+    } else {
+      status.textContent = '⚠ Could not reach backend. Please call someone directly.';
+      status.classList.add('error');
+    }
+    btn.textContent = 'Alert a Family Member';
+    btn.disabled = false;
+  });
+
+  document.getElementById('sosBreathe')?.addEventListener('click', () => {
+    hideSOS();
+    // Navigate to wellness breathe tab
+    document.querySelector('[data-view="wellness"]')?.click();
+    setTimeout(() => {
+      document.querySelector('[data-wtab="breathe"]')?.click();
+    }, 300);
+  });
+
+  /* ── Hint Bar ── */
+  const hintBar = document.getElementById('hintBar');
+  const hintText = document.getElementById('hintText');
+  let hintActionCb = null;
+
+  function showHints(hints) {
+    if(!hints?.length) return;
+    currentHints = hints;
+    hintIdx = 0;
+    displayHint(hints[0]);
+    hintBar?.classList.remove('hidden');
+  }
+
+  function displayHint(hint) {
+    if(hintText) hintText.textContent = hint;
+
+    // Contextual action button
+    const btn = document.getElementById('hintAction');
+    if(!btn) return;
+    if(hint.toLowerCase().includes('breath')) {
+      btn.textContent = '🫁 Breathe'; btn.style.display='';
+      hintActionCb = () => {
+        hideSOS();
+        document.querySelector('[data-view="wellness"]')?.click();
+        setTimeout(()=>document.querySelector('[data-wtab="breathe"]')?.click(), 300);
+        hintBar?.classList.add('hidden');
+      };
+    } else if(hint.toLowerCase().includes('journal')) {
+      btn.textContent = '✍ Journal'; btn.style.display='';
+      hintActionCb = () => {
+        document.querySelector('[data-view="wellness"]')?.click();
+        setTimeout(()=>document.querySelector('[data-wtab="journal"]')?.click(), 300);
+        hintBar?.classList.add('hidden');
+      };
+    } else if(hint.toLowerCase().includes('meditat')) {
+      btn.textContent = '☯ Meditate'; btn.style.display='';
+      hintActionCb = () => {
+        document.querySelector('[data-view="wellness"]')?.click();
+        setTimeout(()=>document.querySelector('[data-wtab="meditate"]')?.click(), 300);
+        hintBar?.classList.add('hidden');
+      };
+    } else {
+      btn.style.display = 'none';
+      hintActionCb = null;
+    }
+  }
+
+  document.getElementById('hintAction')?.addEventListener('click', () => {
+    hintActionCb?.();
+    // Cycle to next hint
+    hintIdx = (hintIdx + 1) % currentHints.length;
+    if(currentHints.length > 1) displayHint(currentHints[hintIdx]);
+  });
+
+  document.getElementById('hintClose')?.addEventListener('click', () => {
+    hintBar?.classList.add('hidden');
+  });
+
+  // Auto-hide hint after 12 seconds
+  let hintTimer;
+  function scheduleHintHide() {
+    clearTimeout(hintTimer);
+    hintTimer = setTimeout(()=>hintBar?.classList.add('hidden'), 12000);
+  }
+
+  /* ── Toast ── */
+  function showToast(msg, duration=3500) {
+    const toast = document.getElementById('alertToast');
+    const text  = document.getElementById('alertToastText');
+    if(!toast) return;
+    if(text) text.textContent = msg;
+    toast.classList.remove('hidden');
+    setTimeout(()=>toast.classList.add('hidden'), duration);
+  }
+
+  /* ── Register callbacks with SoulCore ── */
+  // Wait for SoulCore to be ready
+  function tryRegister() {
+    if(window.SoulCore) {
+      SoulCore.onDistress((data) => showSOS(data));
+      SoulCore.onHints((hints) => { showHints(hints); scheduleHintHide(); });
+    } else {
+      setTimeout(tryRegister, 100);
+    }
+  }
+
+  /* ── Init ── */
+  window.addEventListener('load', () => {
+    initSetup();
+    tryRegister();
+  });
+
+  // Expose for external use
+  window.MySoulV6 = { showSOS, hideSOS, showHints, showToast };
+
+})();
+</script>
+
+  <script>
+  /* ══════════════════════════════════════════════
+     CHANGE 1 — Persistent mood colour
+     --ec and --ec-rgb both update on every emotion
+     detect and stay locked until the NEXT emotion.
+  ══════════════════════════════════════════════ */
+  (function patchMoodColour() {
+    // Colour map: only the three allowed background colours
+    const MOOD_COL = {
+      neutral:  '#00c8ff',  // blue
+      joy:      '#ffe040',  // yellow
+      happy:    '#ffe040',  // yellow
+      calm:     '#38f098',  // green
+      sad:      '#00c8ff',  // blue
+      angry:    '#ffe040',  // yellow
+      stressed: '#ffe040',  // yellow
+      fear:     '#00c8ff',  // blue
+      love:     '#38f098',  // green
+      surprised:'#ffe040',  // yellow
+      distress: '#00c8ff',  // blue
+      anxious:  '#00c8ff',  // blue
+      academic: '#38f098',  // green
+    };
+
+    function hexToRgb(hex) {
+      hex = hex.replace('#','');
+      return parseInt(hex.slice(0,2),16)+','+parseInt(hex.slice(2,4),16)+','+parseInt(hex.slice(4,6),16);
+    }
+
+    function applyMoodColour(emotion) {
+      const col = MOOD_COL[emotion] || '#00c8ff';
+      const rgb = hexToRgb(col);
+      // Set BOTH CSS variables so everything that uses --ec or --ec-rgb stays in sync
+      document.documentElement.style.setProperty('--ec', col);
+      document.documentElement.style.setProperty('--ec-rgb', rgb);
+      // Persist so page reloads restore last mood colour
+      try { localStorage.setItem('ms_last_mood_col', col); localStorage.setItem('ms_last_mood_emotion', emotion); } catch(e) {}
+    }
+
+    // Restore last known mood colour immediately on load (before first response)
+    try {
+      const savedEmo = localStorage.getItem('ms_last_mood_emotion') || 'neutral';
+      applyMoodColour(savedEmo);
+    } catch(e) {}
+
+    // Patch UILayer.setEmotion — run after DOM ready
+    function patchUILayer() {
+      if (!window.UILayer) { setTimeout(patchUILayer, 200); return; }
+      const orig = UILayer.setEmotion.bind(UILayer);
+      UILayer.setEmotion = function(eKey, ...rest) {
+        applyMoodColour(eKey || 'neutral');
+        orig(eKey, ...rest);
+      };
+    }
+    patchUILayer();
+  })();
+
+  /* ══════════════════════════════════════════════
+     CHANGE 2 — Name Your AI panel logic
+     MySoul AI brand stays unchanged.
+     Nickname is stored in localStorage as ms_ai_nick
+     and used only in chat greetings / companion text.
+  ══════════════════════════════════════════════ */
+  (function initNickPanel() {
+    const NICK_KEY = 'ms_ai_nick';
+
+    function getNick() { try { return localStorage.getItem(NICK_KEY) || ''; } catch(e) { return ''; } }
+    function setNick(n) { try { localStorage.setItem(NICK_KEY, n); } catch(e) {} }
+
+    function refreshDisplay() {
+      const el = document.getElementById('currentNickDisplay');
+      const inp = document.getElementById('aiNickInput');
+      const nick = getNick();
+      if (el) el.textContent = nick || 'None set';
+      if (inp && !inp.value) inp.value = nick;
+    }
+
+    function showFeedback(msg, col) {
+      const fb = document.getElementById('aiNickFeedback');
+      if (!fb) return;
+      fb.textContent = msg;
+      fb.style.color = col || 'rgba(56,240,152,.85)';
+      fb.style.opacity = '1';
+      setTimeout(() => fb.style.opacity = '0', 2800);
+    }
+
+    function saveNick() {
+      const inp = document.getElementById('aiNickInput');
+      const val = (inp?.value || '').trim();
+      if (!val) {
+        inp.style.borderColor = '#ff4060';
+        setTimeout(() => inp.style.borderColor = 'rgba(0,200,255,.22)', 900);
+        showFeedback('Please enter a name first.', 'rgba(255,80,100,.8)');
+        return;
+      }
+      setNick(val);
+      refreshDisplay();
+      showFeedback('✓ Nickname saved! Your AI will now introduce itself as "' + val + '".');
+      window.SoulCore?.SFX?.success?.();
+    }
+
+    function clearNick() {
+      setNick('');
+      const inp = document.getElementById('aiNickInput');
+      if (inp) inp.value = '';
+      refreshDisplay();
+      showFeedback('Nickname removed. AI will use default greeting.', 'rgba(180,210,255,.6)');
+    }
+
+    // Wire up buttons (wait for DOM)
+    function wireNick() {
+      const saveBtn  = document.getElementById('aiNickSaveBtn');
+      const clearBtn = document.getElementById('aiNickClearBtn');
+      const inp      = document.getElementById('aiNickInput');
+      if (!saveBtn) { setTimeout(wireNick, 300); return; }
+      saveBtn.addEventListener('click', saveNick);
+      clearBtn?.addEventListener('click', clearNick);
+      inp?.addEventListener('keydown', e => { if (e.key === 'Enter') saveNick(); });
+      refreshDisplay();
+    }
+    wireNick();
+
+    // Patch the first AI greeting to include the nickname
+    function patchGreeting() {
+      const nick = getNick();
+      if (!nick) return;
+      const firstMsg = document.querySelector('.msg-ai .msg-text');
+      if (firstMsg && !firstMsg.dataset.nickPatched) {
+        firstMsg.dataset.nickPatched = '1';
+        const setup = JSON.parse(localStorage.getItem('ms_setup') || '{}');
+        const userName = setup.user_name ? ', <strong>' + setup.user_name + '</strong>' : '';
+        firstMsg.innerHTML = 'Hello' + userName + '! I\'m <strong>' + nick + '</strong> — your emotional intelligence companion. I sense, understand, and grow with you. How are you feeling right now?';
+      }
+    }
+    // Run after page scripts initialise
+    setTimeout(patchGreeting, 600);
+  })();
+  </script>
+</body>
+</html>

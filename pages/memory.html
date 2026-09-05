@@ -1,0 +1,145 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/><meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>Memory Bank — MySoul AI</title>
+<link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=DM+Sans:wght@300;400;500&family=JetBrains+Mono:wght@300;400&display=swap" rel="stylesheet"/>
+<link rel="stylesheet" href="../modules/soul-os.css"/>
+<style>
+.mem-search-bar{padding:0 20px 16px;display:flex;gap:10px}
+.mem-tags{display:flex;gap:8px;overflow-x:auto;padding:0 20px 16px;scrollbar-width:none}
+.mem-tags::-webkit-scrollbar{display:none}
+.mem-timeline{padding:0 20px}
+.mem-group{margin-bottom:28px}
+.mem-day{font-size:10px;letter-spacing:.14em;text-transform:uppercase;color:var(--text-3);margin-bottom:12px;padding-left:20px;position:relative}
+.mem-day::before{content:'';position:absolute;left:0;top:50%;transform:translateY(-50%);width:12px;height:1px;background:rgba(var(--ec-rgb),.3)}
+.mem-entry{display:flex;gap:12px;margin-bottom:10px;padding:14px 16px;border-radius:16px;background:rgba(255,255,255,.025);border:1px solid rgba(var(--ec-rgb),.08);cursor:pointer;transition:all .3s ease;animation:os-fade-up .4s ease both}
+.mem-entry:hover{background:rgba(var(--ec-rgb),.06);border-color:rgba(var(--ec-rgb),.22);transform:translateX(4px)}
+.mem-dot{width:10px;height:10px;border-radius:50%;background:var(--ec);flex-shrink:0;margin-top:4px;box-shadow:0 0 8px var(--ec);transition:background .5s ease}
+.mem-body{flex:1}
+.mem-text{font-size:14px;color:var(--text-1);line-height:1.55}
+.mem-meta{display:flex;gap:8px;margin-top:6px;flex-wrap:wrap;align-items:center}
+.mem-emo{font-size:10px;padding:2px 8px;border-radius:8px;background:rgba(var(--ec-rgb),.12);color:var(--ec);text-transform:capitalize;font-family:var(--f-display);letter-spacing:.06em}
+.mem-time{font-size:10px;color:var(--text-3)}
+.mem-chip-tag{font-size:10px;padding:2px 8px;border-radius:8px;background:rgba(255,255,255,.04);color:var(--text-3);border:1px solid rgba(255,255,255,.06);text-transform:capitalize}
+.mem-empty{text-align:center;padding:48px 20px;color:var(--text-3);font-size:14px}
+.mem-entry.expanded .mem-expand{display:block}
+.mem-expand{display:none;margin-top:10px;padding-top:10px;border-top:1px solid rgba(var(--ec-rgb),.1);font-size:13px;color:var(--text-2);line-height:1.6}
+.mem-stats{display:flex;gap:10px;padding:0 20px 20px;overflow-x:auto;scrollbar-width:none}
+.ms-card{flex-shrink:0;padding:12px 18px;border-radius:14px;background:rgba(255,255,255,.025);border:1px solid rgba(255,255,255,.06);text-align:center;min-width:90px}
+.ms-val{font-family:var(--f-display);font-size:22px;font-weight:700;color:var(--ec)}
+.ms-lbl{font-size:10px;color:var(--text-3);margin-top:3px}
+</style>
+</head>
+<body>
+<div class="os-bg"></div>
+<canvas class="os-bg-canvas" id="bgCanvas"></canvas>
+<div class="os-page">
+  <div class="os-page-header">
+    <div>
+      <div class="os-page-title">Memory Bank</div>
+      <div class="os-page-subtitle">Your emotional journey</div>
+    </div>
+    <a href="launcher.html" class="os-back-btn">⬡</a>
+  </div>
+
+  <div class="mem-stats" id="memStats"></div>
+
+  <div class="mem-search-bar">
+    <input class="os-input" id="memSearch" placeholder="⌕  Search memories…" autocomplete="off"/>
+  </div>
+  <div class="mem-tags" id="memTagsRow"></div>
+  <div class="mem-timeline" id="memTimeline"></div>
+</div>
+<nav class="os-nav" id="osNav"></nav>
+<script src="../modules/auto-voice-trigger.js"></script>
+<script src="../modules/soul-features.js"></script>
+<script src="../modules/page-shell.js"></script>
+<script>
+buildNav('');
+buildParticles('bgCanvas');
+
+const ECOLS={neutral:'0,200,255',joy:'255,224,64',happy:'255,218,32',calm:'56,240,152',sad:'91,141,238',angry:'255,64,96',stressed:'255,64,96',anxious:'168,85,247',fear:'168,85,247',love:'255,107,160',surprised:'255,159,56',academic:'0,200,255'};
+const EGLYPHS={neutral:'🤖',joy:'😊',happy:'😄',calm:'😌',sad:'😢',angry:'😠',stressed:'😰',anxious:'😰',fear:'😨',love:'🥰',surprised:'😲',academic:'📚'};
+
+let _activeTag=null;
+
+function load(){return JSON.parse(localStorage.getItem('ms_memory_bank')||'[]');}
+
+function renderStats(){
+  const data=load();
+  const hist=JSON.parse(localStorage.getItem('ms_hist')||'[]');
+  const el=document.getElementById('memStats');
+  const emos={};
+  hist.forEach(h=>{emos[h.emotion]=(emos[h.emotion]||0)+1;});
+  const topEmo=Object.entries(emos).sort((a,b)=>b[1]-a[1])[0];
+  el.innerHTML=`
+    <div class="ms-card"><div class="ms-val">${data.length}</div><div class="ms-lbl">Memories</div></div>
+    <div class="ms-card"><div class="ms-val">${hist.length}</div><div class="ms-lbl">Conversations</div></div>
+    <div class="ms-card"><div class="ms-val">${topEmo?EGLYPHS[topEmo[0]]:'🤖'}</div><div class="ms-lbl">Top Mood</div></div>
+    <div class="ms-card"><div class="ms-val">${[...new Set(data.flatMap(d=>d.tags))].length}</div><div class="ms-lbl">Topics</div></div>
+  `;
+}
+
+function renderTags(){
+  const data=load();
+  const allTags=[...new Set(data.flatMap(d=>d.tags||[]))].slice(0,10);
+  const el=document.getElementById('memTagsRow');
+  el.innerHTML=`<button class="os-chip ${!_activeTag?'active':''}" data-tag="">All</button>`+
+    allTags.map(t=>`<button class="os-chip ${_activeTag===t?'active':''}" data-tag="${t}">${t}</button>`).join('');
+  el.querySelectorAll('.os-chip').forEach(b=>b.addEventListener('click',()=>{_activeTag=b.dataset.tag||null;renderTimeline();}));
+}
+
+function renderTimeline(q=''){
+  let data=load();
+  if(_activeTag) data=data.filter(d=>(d.tags||[]).includes(_activeTag));
+  if(q) data=data.filter(d=>d.text?.toLowerCase().includes(q.toLowerCase()));
+  const el=document.getElementById('memTimeline');
+  if(!data.length){el.innerHTML='<div class="mem-empty">No memories yet — start chatting to build your story</div>';return;}
+  const groups={};
+  data.forEach(d=>{
+    const day=new Date(d.ts||d.time||Date.now()).toLocaleDateString('en-US',{weekday:'long',month:'short',day:'numeric'});
+    if(!groups[day]) groups[day]=[];
+    groups[day].push(d);
+  });
+  el.innerHTML=Object.entries(groups).map(([day,items])=>`
+    <div class="mem-group">
+      <div class="mem-day">${day}</div>
+      ${items.map((item,i)=>`
+        <div class="mem-entry" style="animation-delay:${i*.05}s;--ec:rgb(${ECOLS[item.emotion]||'0,200,255'})">
+          <div class="mem-dot" style="background:rgb(${ECOLS[item.emotion]||'0,200,255'});box-shadow:0 0 8px rgb(${ECOLS[item.emotion]||'0,200,255'})"></div>
+          <div class="mem-body">
+            <div class="mem-text">${esc(item.text||'')}</div>
+            <div class="mem-meta">
+              <span class="mem-emo" style="background:rgba(${ECOLS[item.emotion]||'0,200,255'},.12);color:rgb(${ECOLS[item.emotion]||'0,200,255'})">${EGLYPHS[item.emotion]||'🤖'} ${item.emotion||'neutral'}</span>
+              <span class="mem-time">${new Date(item.ts||item.time||Date.now()).toLocaleTimeString('en-US',{hour:'2-digit',minute:'2-digit'})}</span>
+              ${(item.tags||[]).map(t=>`<span class="mem-chip-tag">${t}</span>`).join('')}
+            </div>
+          </div>
+        </div>
+      `).join('')}
+    </div>
+  `).join('');
+  el.querySelectorAll('.mem-entry').forEach(e=>{
+    e.addEventListener('click',()=>e.classList.toggle('expanded'));
+  });
+}
+
+function esc(s){return(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');}
+
+// Populate from chat history if memory bank empty
+function seedFromHistory(){
+  if(load().length) return;
+  const hist=JSON.parse(localStorage.getItem('ms_hist')||'[]');
+  if(!hist.length) return;
+  const seed=hist.slice(0,20).map(h=>({id:h.time,ts:new Date(h.time||Date.now()).toISOString(),emotion:h.emotion||'neutral',text:`Felt ${h.emotion||'neutral'} during a conversation`,tags:[h.emotion||'neutral','chat']}));
+  localStorage.setItem('ms_memory_bank',JSON.stringify(seed));
+}
+seedFromHistory();
+renderStats();
+renderTags();
+renderTimeline();
+document.getElementById('memSearch').addEventListener('input',e=>renderTimeline(e.target.value));
+</script>
+</body>
+</html>

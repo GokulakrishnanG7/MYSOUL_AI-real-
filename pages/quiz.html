@@ -1,0 +1,285 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/><meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>Quiz Mode — MySoul AI</title>
+<link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=DM+Sans:wght@300;400;500&family=JetBrains+Mono:wght@300;400&display=swap" rel="stylesheet"/>
+<link rel="stylesheet" href="../modules/soul-os.css"/>
+<style>
+.quiz-setup{padding:0 20px 20px}
+.quiz-main{padding:0 20px 20px;display:none;animation:os-fade-up .5s ease}
+.quiz-main.show{display:block}
+.quiz-result{padding:0 20px 20px;display:none;animation:os-fade-up .5s ease;text-align:center}
+.quiz-result.show{display:block}
+
+/* Setup */
+.topic-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(100px,1fr));gap:10px;margin:16px 0}
+.topic-btn{padding:14px 10px;border-radius:16px;background:rgba(255,255,255,.025);border:1px solid rgba(255,255,255,.06);color:var(--text-2);font-size:13px;cursor:pointer;transition:all .3s ease;text-align:center}
+.topic-btn:hover{border-color:rgba(0,200,255,.35);color:var(--ec);background:rgba(0,200,255,.06);transform:scale(1.04)}
+.topic-btn.selected{border-color:rgba(0,200,255,.6);color:var(--ec);background:rgba(0,200,255,.12)}
+.topic-icon{font-size:24px;margin-bottom:6px;display:block}
+
+/* Quiz */
+.quiz-header{display:flex;justify-content:space-between;align-items:center;margin-bottom:20px}
+.q-num{font-family:var(--f-display);font-size:12px;letter-spacing:.14em;color:var(--text-3)}
+.q-timer{font-family:var(--f-mono);font-size:24px;color:var(--ec);min-width:60px;text-align:right}
+.q-timer.warning{color:#ff4060;animation:timerWarn .5s ease-in-out infinite alternate}
+@keyframes timerWarn{from{opacity:1}to{opacity:.5}}
+
+.quiz-progress{margin-bottom:20px}
+
+.question-card{padding:22px;border-radius:20px;background:rgba(0,200,255,.04);border:1px solid rgba(0,200,255,.15);margin-bottom:20px}
+.q-text{font-size:17px;color:var(--text-1);line-height:1.6;font-weight:500}
+
+.options-grid{display:flex;flex-direction:column;gap:10px}
+.option-btn{padding:14px 18px;border-radius:14px;background:rgba(255,255,255,.025);border:1px solid rgba(255,255,255,.07);color:var(--text-1);font-size:14px;cursor:pointer;text-align:left;transition:all .3s ease;display:flex;align-items:center;gap:12px}
+.option-btn:hover:not(:disabled){background:rgba(0,200,255,.08);border-color:rgba(0,200,255,.3);transform:translateX(4px)}
+.option-btn.correct{background:rgba(56,240,152,.12);border-color:rgba(56,240,152,.5);color:#38f098}
+.option-btn.wrong{background:rgba(255,64,96,.1);border-color:rgba(255,64,96,.4);color:#ff4060}
+.option-letter{width:28px;height:28px;border-radius:50%;background:rgba(var(--ec-rgb),.1);border:1px solid rgba(var(--ec-rgb),.25);color:var(--ec);font-family:var(--f-display);font-size:11px;font-weight:700;display:flex;align-items:center;justify-content:center;flex-shrink:0}
+
+.feedback-box{padding:14px 18px;border-radius:14px;margin-top:14px;font-size:14px;line-height:1.6;display:none}
+.feedback-box.show{display:block;animation:os-fade-up .3s ease}
+.feedback-correct{background:rgba(56,240,152,.1);border:1px solid rgba(56,240,152,.25);color:#38f098}
+.feedback-wrong{background:rgba(255,64,96,.08);border:1px solid rgba(255,64,96,.2);color:var(--text-2)}
+
+/* Result */
+.score-orb{width:140px;height:140px;border-radius:50%;border:3px solid var(--ec);background:rgba(var(--ec-rgb),.08);display:flex;align-items:center;justify-content:center;flex-direction:column;margin:20px auto;box-shadow:0 0 60px rgba(var(--ec-rgb),.3);animation:os-breathe 2.5s ease-in-out infinite}
+.score-pct{font-family:var(--f-display);font-size:36px;font-weight:800;color:var(--ec)}
+.score-lbl{font-size:11px;color:var(--text-3);letter-spacing:.1em}
+.result-msg{font-family:var(--f-display);font-size:22px;font-weight:700;margin:16px 0 8px}
+.result-sub{font-size:14px;color:var(--text-2);margin-bottom:24px}
+.q-breakdown{text-align:left}
+.qb-item{display:flex;align-items:center;gap:10px;padding:10px 14px;border-radius:12px;background:rgba(255,255,255,.02);margin-bottom:6px;font-size:13px;color:var(--text-2)}
+.qb-icon{font-size:16px;flex-shrink:0}
+</style>
+</head>
+<body>
+<div class="os-bg"></div>
+<canvas class="os-bg-canvas" id="bgCanvas"></canvas>
+<div class="os-page">
+  <div class="os-page-header">
+    <div>
+      <div class="os-page-title">🧠 Quiz Mode</div>
+      <div class="os-page-subtitle">Test your knowledge</div>
+    </div>
+    <a href="launcher.html" class="os-back-btn">⬡</a>
+  </div>
+
+  <!-- Setup -->
+  <div class="quiz-setup" id="quizSetup">
+    <div class="os-label" style="margin-bottom:4px">Select Topic</div>
+    <div class="topic-grid" id="topicGrid">
+      <button class="topic-btn" data-topic="General Knowledge"><span class="topic-icon">🌍</span>General</button>
+      <button class="topic-btn" data-topic="Mathematics"><span class="topic-icon">➗</span>Math</button>
+      <button class="topic-btn" data-topic="Science"><span class="topic-icon">🔬</span>Science</button>
+      <button class="topic-btn" data-topic="History"><span class="topic-icon">🏛️</span>History</button>
+      <button class="topic-btn" data-topic="Technology"><span class="topic-icon">💻</span>Tech</button>
+      <button class="topic-btn" data-topic="English Grammar"><span class="topic-icon">📝</span>English</button>
+      <button class="topic-btn" data-topic="Geography"><span class="topic-icon">🗺️</span>Geography</button>
+      <button class="topic-btn selected" data-topic="custom"><span class="topic-icon">✏️</span>Custom</button>
+    </div>
+    <input class="os-input" id="customTopic" placeholder="Or type any topic…" style="margin-bottom:14px" autocomplete="off"/>
+    <div style="display:flex;gap:10px;align-items:center">
+      <div style="flex:1">
+        <div class="os-label" style="margin-bottom:6px">Questions</div>
+        <select class="os-input os-select" id="qCount" style="width:100%">
+          <option value="5">5 Questions</option>
+          <option value="10" selected>10 Questions</option>
+          <option value="15">15 Questions</option>
+        </select>
+      </div>
+      <div style="flex:1">
+        <div class="os-label" style="margin-bottom:6px">Time per Q</div>
+        <select class="os-input os-select" id="qTime" style="width:100%">
+          <option value="15">15 seconds</option>
+          <option value="30" selected>30 seconds</option>
+          <option value="60">60 seconds</option>
+        </select>
+      </div>
+    </div>
+    <button class="os-btn os-btn-solid" id="startQuiz" style="width:100%;margin-top:16px">🚀 Start Quiz</button>
+  </div>
+
+  <!-- Quiz -->
+  <div class="quiz-main" id="quizMain">
+    <div class="quiz-header">
+      <div class="q-num" id="qNum">Q 1 / 10</div>
+      <div class="q-timer" id="qTimer">30</div>
+    </div>
+    <div class="quiz-progress"><div class="os-progress"><div class="os-progress-fill" id="qProgress" style="width:0%"></div></div></div>
+    <div class="question-card"><div class="q-text" id="qText">Loading question…</div></div>
+    <div class="options-grid" id="optionsGrid"></div>
+    <div class="feedback-box" id="feedbackBox"></div>
+    <button class="os-btn os-btn-solid" id="nextBtn" style="width:100%;margin-top:16px;display:none">Next →</button>
+  </div>
+
+  <!-- Result -->
+  <div class="quiz-result" id="quizResult">
+    <div class="score-orb" id="scoreOrb">
+      <div class="score-pct" id="scorePct">0%</div>
+      <div class="score-lbl">SCORE</div>
+    </div>
+    <div class="result-msg" id="resultMsg">Great attempt!</div>
+    <div class="result-sub" id="resultSub">You answered 7 out of 10 correctly</div>
+    <div class="q-breakdown" id="qBreakdown"></div>
+    <div style="display:flex;gap:10px;justify-content:center;margin-top:20px">
+      <button class="os-btn os-btn-solid" onclick="resetQuiz()">Play Again</button>
+      <button class="os-btn" onclick="location.href='launcher.html'">Home</button>
+    </div>
+  </div>
+</div>
+<nav class="os-nav" id="osNav"></nav>
+<script src="../modules/auto-voice-trigger.js"></script>
+<script src="../modules/soul-features.js"></script>
+<script src="../modules/page-shell.js"></script>
+<script>
+buildNav('');
+buildParticles('bgCanvas','50','168,85,247');
+
+let _questions=[], _qIndex=0, _score=0, _timer=null, _timeLeft=30, _timePerQ=30;
+let _answered=false, _results=[];
+let _selectedTopic='custom';
+
+// Topic selection
+document.querySelectorAll('.topic-btn').forEach(b=>{
+  b.addEventListener('click',()=>{
+    document.querySelectorAll('.topic-btn').forEach(x=>x.classList.remove('selected'));
+    b.classList.add('selected');
+    _selectedTopic=b.dataset.topic;
+    if(_selectedTopic!=='custom') document.getElementById('customTopic').value='';
+  });
+});
+
+async function startQuiz(){
+  const custom=document.getElementById('customTopic').value.trim();
+  const topic=custom||(_selectedTopic==='custom'?'General Knowledge':_selectedTopic);
+  const count=document.getElementById('qCount').value;
+  _timePerQ=+document.getElementById('qTime').value;
+  
+  document.getElementById('quizSetup').style.display='none';
+  document.getElementById('quizMain').classList.add('show');
+  document.getElementById('qText').innerHTML='<div class="os-loading"><div class="os-spinner"></div><span>Generating '+count+' questions on '+topic+'…</span></div>';
+  
+  const prompt=`Generate exactly ${count} multiple-choice quiz questions about "${topic}". Reply in JSON only (no markdown):
+{"questions":[{"q":"question text","options":["A","B","C","D"],"correct":0,"explanation":"brief explanation"}]}
+correct is the index (0-3) of the right answer.`;
+  
+  const res=await soulAPI(prompt,'QUIZ_GENERATOR');
+  try{
+    let raw=(res.response||'').replace(/```json|```/g,'').trim();
+    const parsed=JSON.parse(raw);
+    _questions=parsed.questions||[];
+  }catch{
+    _questions=getFallbackQuestions(topic,+count);
+  }
+  
+  if(!_questions.length){showToast('Could not generate quiz','error');resetQuiz();return;}
+  _qIndex=0;_score=0;_results=[];
+  showQuestion();
+}
+
+function getFallbackQuestions(topic,n){
+  const base=[
+    {q:`What is a key aspect of ${topic}?`,options:['Learning','Ignoring','Avoiding','Forgetting'],correct:0,explanation:'Continuous learning is fundamental.'},
+    {q:`Which approach is best for understanding ${topic}?`,options:['Practice regularly','Study once','Skip hard parts','Wait for exams'],correct:0,explanation:'Regular practice builds mastery.'},
+    {q:`What is important when studying ${topic}?`,options:['Focus and consistency','Multitasking','Rushing','Memorizing only'],correct:0,explanation:'Focus and consistency lead to deep understanding.'},
+  ];
+  return Array.from({length:Math.min(n,3)},(_,i)=>base[i%base.length]);
+}
+
+function showQuestion(){
+  if(_qIndex>=_questions.length){endQuiz();return;}
+  const q=_questions[_qIndex];
+  _answered=false;
+  const total=_questions.length;
+  document.getElementById('qNum').textContent=`Q ${_qIndex+1} / ${total}`;
+  document.getElementById('qProgress').style.width=((_qIndex/total)*100)+'%';
+  document.getElementById('qText').innerHTML=q.q;
+  document.getElementById('feedbackBox').classList.remove('show','feedback-correct','feedback-wrong');
+  document.getElementById('nextBtn').style.display='none';
+  
+  const LETTERS=['A','B','C','D'];
+  document.getElementById('optionsGrid').innerHTML=(q.options||[]).map((opt,i)=>`
+    <button class="option-btn" onclick="selectAnswer(${i})" data-i="${i}">
+      <div class="option-letter">${LETTERS[i]}</div>
+      <span>${opt}</span>
+    </button>
+  `).join('');
+  
+  _timeLeft=_timePerQ;
+  updateTimer();
+  clearInterval(_timer);
+  _timer=setInterval(()=>{
+    _timeLeft--;
+    updateTimer();
+    if(_timeLeft<=0){clearInterval(_timer);if(!_answered)selectAnswer(-1);}
+  },1000);
+}
+
+function updateTimer(){
+  const el=document.getElementById('qTimer');
+  el.textContent=_timeLeft;
+  el.classList.toggle('warning',_timeLeft<=5);
+}
+
+function selectAnswer(i){
+  if(_answered) return;
+  _answered=true;
+  clearInterval(_timer);
+  const q=_questions[_qIndex];
+  const correct=q.correct;
+  const isCorrect=i===correct;
+  if(isCorrect) _score++;
+  _results.push({q:q.q,userAns:i,correct,isCorrect});
+  
+  document.querySelectorAll('.option-btn').forEach((btn,bi)=>{
+    btn.disabled=true;
+    if(bi===correct) btn.classList.add('correct');
+    else if(bi===i&&!isCorrect) btn.classList.add('wrong');
+  });
+  
+  const fb=document.getElementById('feedbackBox');
+  fb.className='feedback-box show '+(isCorrect?'feedback-correct':'feedback-wrong');
+  fb.textContent=isCorrect?`✓ Correct! ${q.explanation||'Well done!'}`:`✕ The correct answer is option ${['A','B','C','D'][correct]}. ${q.explanation||''}`;
+  
+  document.getElementById('nextBtn').style.display='block';
+}
+
+function endQuiz(){
+  document.getElementById('quizMain').classList.remove('show');
+  document.getElementById('quizResult').classList.add('show');
+  const pct=Math.round(_score/_questions.length*100);
+  document.getElementById('scorePct').textContent=pct+'%';
+  
+  let msg,sub;
+  if(pct>=90){msg='Outstanding! 🌟';sub='You nailed it!';}
+  else if(pct>=70){msg='Well done! ✦';sub='Great performance!';}
+  else if(pct>=50){msg='Good effort! 💙';sub='Keep practicing!';}
+  else{msg='Keep going! 🌱';sub='Every attempt is growth!';}
+  
+  document.getElementById('resultMsg').textContent=msg;
+  document.getElementById('resultSub').textContent=`You answered ${_score} out of ${_questions.length} correctly`;
+  document.getElementById('qBreakdown').innerHTML=_results.map(r=>`
+    <div class="qb-item"><span class="qb-icon">${r.isCorrect?'✓':'✕'}</span><span style="color:${r.isCorrect?'#38f098':'#ff4060'};margin-right:4px">${r.isCorrect?'Correct':'Wrong'}</span><span style="flex:1;font-size:12px">${r.q.slice(0,60)}${r.q.length>60?'…':''}</span></div>
+  `).join('');
+  
+  // Set color based on score
+  if(pct>=70){document.documentElement.style.setProperty('--ec','#38f098');document.documentElement.style.setProperty('--ec-rgb','56,240,152');}
+  else if(pct<50){document.documentElement.style.setProperty('--ec','#ff6b6b');document.documentElement.style.setProperty('--ec-rgb','255,107,107');}
+}
+
+function resetQuiz(){
+  document.getElementById('quizSetup').style.display='block';
+  document.getElementById('quizMain').classList.remove('show');
+  document.getElementById('quizResult').classList.remove('show');
+  document.documentElement.style.setProperty('--ec','#00c8ff');
+  document.documentElement.style.setProperty('--ec-rgb','0,200,255');
+}
+
+document.getElementById('startQuiz').addEventListener('click',startQuiz);
+document.getElementById('nextBtn').addEventListener('click',()=>{_qIndex++;showQuestion();});
+window.selectAnswer=selectAnswer; window.resetQuiz=resetQuiz;
+</script>
+</body>
+</html>

@@ -1,0 +1,30 @@
+/* ═══════════════════════════════════════════════════════════
+   MySoul AI v3 — Responsive (standalone file)
+   Main breakpoint rules are in animations.css above.
+   This file holds any extra overrides.
+═══════════════════════════════════════════════════════════ */
+
+@media (max-width:1280px) {
+  .home-grid { grid-template-columns:260px 1fr 300px; }
+}
+
+@media (max-width:460px) {
+  .header { padding:0 12px; }
+  .hdr-btn { width:30px; height:30px; font-size:.85rem; }
+  .main-nav { gap:2px; }
+}
+
+/* ─── Calendar responsive ─── */
+@media (max-width:880px) {
+  .cal-weekdays span { font-size:.48rem; }
+  .cal-d { padding:4px 2px; min-height:42px; }
+  .cal-d-e { font-size:.75rem; }
+  .emo-cal { gap:3px; }
+}
+
+@media (max-width:560px) {
+  .suggestion-chips { display:none; }
+  .cal-d-n { font-size:.5rem; }
+  .chips-row { gap:5px; }
+  .chip { padding:5px 10px; font-size:.65rem; }
+}

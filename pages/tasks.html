@@ -1,0 +1,190 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/><meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>Tasks & Schedule — MySoul AI</title>
+<link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=DM+Sans:wght@300;400;500&family=JetBrains+Mono:wght@300;400&display=swap" rel="stylesheet"/>
+<link rel="stylesheet" href="../modules/soul-os.css"/>
+<style>
+.task-add-bar{padding:0 20px 16px;display:flex;gap:10px}
+.task-filters{display:flex;gap:8px;padding:0 20px 16px;overflow-x:auto;scrollbar-width:none}
+.task-filters::-webkit-scrollbar{display:none}
+.tasks-section{padding:0 20px}
+.task-item{display:flex;align-items:center;gap:12px;padding:14px 16px;border-radius:16px;background:rgba(255,255,255,.025);border:1px solid rgba(255,255,255,.06);margin-bottom:8px;transition:all .3s ease;animation:os-fade-up .4s ease both}
+.task-item:hover{background:rgba(0,200,255,.04);border-color:rgba(0,200,255,.14)}
+.task-item.done{opacity:.5}
+.task-item.done .task-text{text-decoration:line-through}
+.task-check{width:22px;height:22px;border-radius:50%;border:2px solid;flex-shrink:0;cursor:pointer;display:flex;align-items:center;justify-content:center;font-size:10px;transition:all .2s ease}
+.task-check.p-high{border-color:#ff4060;color:#ff4060}
+.task-check.p-medium{border-color:#ffe040;color:#ffe040}
+.task-check.p-low{border-color:#38f098;color:#38f098}
+.task-item.done .task-check{background:rgba(56,240,152,.2);border-color:#38f098;color:#38f098}
+.task-body{flex:1}
+.task-text{font-size:14px;color:var(--text-1)}
+.task-meta{display:flex;gap:8px;margin-top:3px;font-size:10px;color:var(--text-3)}
+.task-del{color:var(--text-3);cursor:pointer;padding:4px;border-radius:6px;transition:all .2s ease;font-size:13px}
+.task-del:hover{color:#ff4060;background:rgba(255,64,96,.1)}
+.priority-dot{width:8px;height:8px;border-radius:50%;flex-shrink:0}
+.p-dot-high{background:#ff4060;box-shadow:0 0 6px #ff4060}
+.p-dot-medium{background:#ffe040;box-shadow:0 0 6px #ffe040}
+.p-dot-low{background:#38f098;box-shadow:0 0 6px #38f098}
+
+.add-modal{position:fixed;bottom:0;left:0;right:0;z-index:9900;padding:20px;background:rgba(6,10,24,.95);border-top:1px solid rgba(0,200,255,.2);border-radius:20px 20px 0 0;backdrop-filter:blur(24px);transform:translateY(100%);transition:transform .4s var(--ease-spring);display:flex;flex-direction:column;gap:12px}
+.add-modal.open{transform:translateY(0)}
+.add-modal-header{display:flex;justify-content:space-between;align-items:center}
+.add-modal-title{font-family:var(--f-display);font-size:15px;color:var(--text-1)}
+.priority-btns{display:flex;gap:8px}
+.pri-btn{padding:6px 14px;border-radius:10px;font-size:12px;cursor:pointer;border:1px solid;transition:all .2s ease;font-family:var(--f-display)}
+.pri-btn.active{opacity:1}
+.stats-bar{display:flex;gap:10px;padding:0 20px 20px;overflow-x:auto;scrollbar-width:none}
+.stats-bar::-webkit-scrollbar{display:none}
+.stat-card{flex-shrink:0;padding:12px 18px;border-radius:14px;background:rgba(255,255,255,.025);border:1px solid rgba(255,255,255,.06);text-align:center;min-width:80px}
+.stat-val{font-family:var(--f-display);font-size:22px;font-weight:700;color:var(--ec)}
+.stat-lbl{font-size:10px;color:var(--text-3);margin-top:2px}
+.empty-state{text-align:center;padding:40px 20px;color:var(--text-3);font-size:14px}
+.empty-icon{font-size:36px;margin-bottom:12px;display:block}
+</style>
+</head>
+<body>
+<div class="os-bg"></div>
+<canvas class="os-bg-canvas" id="bgCanvas"></canvas>
+<div class="os-page">
+  <div class="os-page-header">
+    <div>
+      <div class="os-page-title">📅 Tasks</div>
+      <div class="os-page-subtitle" id="todayLabel">Today</div>
+    </div>
+    <button class="os-back-btn" onclick="openAdd()" style="font-size:20px;font-weight:700">+</button>
+  </div>
+
+  <div class="stats-bar" id="statsBar"></div>
+
+  <div class="task-filters" id="taskFilters">
+    <button class="os-chip active" data-f="all">All</button>
+    <button class="os-chip" data-f="active" style="--chip-rgb:0,200,255">Active</button>
+    <button class="os-chip" data-f="high" style="--chip-rgb:255,64,96">🔥 High</button>
+    <button class="os-chip" data-f="medium" style="--chip-rgb:255,224,64">⚡ Medium</button>
+    <button class="os-chip" data-f="done" style="--chip-rgb:56,240,152">✓ Done</button>
+  </div>
+
+  <div class="tasks-section" id="taskList"></div>
+</div>
+
+<!-- Add Modal -->
+<div class="add-modal" id="addModal">
+  <div class="add-modal-header">
+    <div class="add-modal-title">New Task</div>
+    <button class="os-btn os-btn-sm" onclick="closeAdd()">✕</button>
+  </div>
+  <input class="os-input" id="addInput" placeholder="What needs to be done?" autocomplete="off"/>
+  <div style="display:flex;gap:8px;align-items:center">
+    <span style="font-size:11px;color:var(--text-3);letter-spacing:.1em">PRIORITY</span>
+    <div class="priority-btns">
+      <button class="pri-btn active" data-p="low" style="border-color:#38f098;color:#38f098;background:rgba(56,240,152,.1)">Low</button>
+      <button class="pri-btn" data-p="medium" style="border-color:#ffe040;color:#ffe040;background:rgba(255,224,64,.06)">Medium</button>
+      <button class="pri-btn" data-p="high" style="border-color:#ff4060;color:#ff4060;background:rgba(255,64,96,.06)">High</button>
+    </div>
+  </div>
+  <button class="os-btn os-btn-solid" id="saveTaskBtn">Add Task ↑</button>
+</div>
+
+<nav class="os-nav" id="osNav"></nav>
+<script src="../modules/auto-voice-trigger.js"></script>
+<script src="../modules/soul-features.js"></script>
+<script src="../modules/page-shell.js"></script>
+<script>
+buildNav('tasks');
+buildParticles('bgCanvas');
+document.getElementById('todayLabel').textContent=new Date().toLocaleDateString('en-US',{weekday:'long',month:'long',day:'numeric'});
+
+const KEY='ms_tasks';
+let _filter='all';
+let _selPriority='low';
+
+function loadTasks(){try{return JSON.parse(localStorage.getItem(KEY)||'[]');}catch{return[];}}
+function saveTasks(t){localStorage.setItem(KEY,JSON.stringify(t));}
+
+function renderStats(){
+  const t=loadTasks();
+  const done=t.filter(x=>x.done).length;
+  const active=t.filter(x=>!x.done).length;
+  const high=t.filter(x=>!x.done&&x.priority==='high').length;
+  document.getElementById('statsBar').innerHTML=`
+    <div class="stat-card"><div class="stat-val">${active}</div><div class="stat-lbl">Active</div></div>
+    <div class="stat-card"><div class="stat-val">${done}</div><div class="stat-lbl">Done</div></div>
+    <div class="stat-card"><div class="stat-val">${high}</div><div class="stat-lbl">High Priority</div></div>
+    <div class="stat-card"><div class="stat-val">${Math.round(t.length?done/t.length*100:0)}%</div><div class="stat-lbl">Complete</div></div>
+  `;
+}
+
+function render(){
+  let tasks=loadTasks();
+  if(_filter==='active') tasks=tasks.filter(t=>!t.done);
+  else if(_filter==='done') tasks=tasks.filter(t=>t.done);
+  else if(_filter==='high') tasks=tasks.filter(t=>t.priority==='high'&&!t.done);
+  else if(_filter==='medium') tasks=tasks.filter(t=>t.priority==='medium'&&!t.done);
+  
+  const el=document.getElementById('taskList');
+  if(!tasks.length){
+    el.innerHTML='<div class="empty-state"><span class="empty-icon">📋</span>No tasks here yet<br><small>Tap + to add your first task</small></div>';
+    return;
+  }
+  // Sort: high first, then medium, then low, done last
+  const order={high:0,medium:1,low:2};
+  tasks.sort((a,b)=>a.done===b.done?(order[a.priority]||2)-(order[b.priority]||2):a.done?1:-1);
+  el.innerHTML=tasks.map((t,i)=>`
+    <div class="task-item ${t.done?'done':''}" style="animation-delay:${i*.04}s">
+      <button class="task-check p-${t.priority}" onclick="toggleTask(${t.id})">${t.done?'✓':''}</button>
+      <div class="priority-dot p-dot-${t.priority}"></div>
+      <div class="task-body">
+        <div class="task-text">${esc(t.text)}</div>
+        <div class="task-meta">
+          <span>${t.priority} priority</span>
+          <span>${new Date(t.id).toLocaleTimeString('en-US',{hour:'2-digit',minute:'2-digit'})}</span>
+        </div>
+      </div>
+      <button class="task-del" onclick="deleteTask(${t.id})">✕</button>
+    </div>
+  `).join('');
+}
+
+function toggleTask(id){const t=loadTasks().map(x=>x.id===id?{...x,done:!x.done}:x);saveTasks(t);render();renderStats();}
+function deleteTask(id){saveTasks(loadTasks().filter(x=>x.id!==id));render();renderStats();}
+function esc(s){return(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;');}
+
+// Filters
+document.getElementById('taskFilters').querySelectorAll('.os-chip').forEach(b=>{
+  b.addEventListener('click',()=>{
+    document.querySelectorAll('.os-chip').forEach(x=>x.classList.remove('active'));
+    b.classList.add('active');
+    _filter=b.dataset.f; render();
+  });
+});
+
+// Add modal
+function openAdd(){document.getElementById('addModal').classList.add('open');document.getElementById('addInput').focus();}
+function closeAdd(){document.getElementById('addModal').classList.remove('open');document.getElementById('addInput').value='';}
+
+document.querySelectorAll('.pri-btn').forEach(b=>{
+  b.addEventListener('click',()=>{
+    document.querySelectorAll('.pri-btn').forEach(x=>{x.style.opacity='.5';x.style.fontWeight='400';});
+    b.style.opacity='1'; b.style.fontWeight='700';
+    _selPriority=b.dataset.p;
+  });
+});
+
+document.getElementById('saveTaskBtn').addEventListener('click',()=>{
+  const text=document.getElementById('addInput').value.trim();
+  if(!text) return;
+  const tasks=loadTasks();
+  tasks.unshift({id:Date.now(),text,priority:_selPriority,done:false});
+  saveTasks(tasks); closeAdd(); render(); renderStats();
+  showToast('Task added','success');
+});
+document.getElementById('addInput').addEventListener('keydown',e=>{if(e.key==='Enter')document.getElementById('saveTaskBtn').click();});
+
+renderStats(); render();
+window.toggleTask=toggleTask; window.deleteTask=deleteTask; window.openAdd=openAdd; window.closeAdd=closeAdd;
+</script>
+</body>
+</html>

@@ -1,0 +1,230 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/><meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>Story Mode — MySoul AI</title>
+<link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=DM+Sans:wght@300;400;500&family=JetBrains+Mono:wght@300;400&display=swap" rel="stylesheet"/>
+<link rel="stylesheet" href="../modules/soul-os.css"/>
+<style>
+body{background:radial-gradient(ellipse at 50% 20%,rgba(8,15,42,.98) 0%,rgba(2,3,10,1) 100%)}
+.star-field{position:fixed;inset:0;z-index:0;pointer-events:none}
+.star{position:absolute;border-radius:50%;background:#fff;animation:starTwinkle 3s ease-in-out infinite}
+@keyframes starTwinkle{0%,100%{opacity:.15}50%{opacity:.85}}
+
+.story-nav{position:fixed;top:0;left:0;right:0;z-index:100;display:flex;align-items:center;justify-content:space-between;padding:16px 20px;background:linear-gradient(to bottom,rgba(2,3,10,.95) 60%,transparent);backdrop-filter:blur(8px)}
+.story-back{display:flex;align-items:center;gap:8px;color:var(--text-2);font-size:13px;cursor:pointer;text-decoration:none;transition:color .2s ease}
+.story-back:hover{color:var(--ec)}
+
+.story-scroll{position:relative;z-index:2;padding:80px 20px 120px;max-width:680px;margin:0 auto}
+
+/* Story cards */
+.story-card{padding:36px 40px;border-radius:24px;background:rgba(8,14,34,.75);border:1px solid rgba(56,240,152,.15);backdrop-filter:blur(20px);margin-bottom:20px;cursor:pointer;transition:all .4s ease;position:relative;overflow:hidden}
+.story-card::before{content:'';position:absolute;inset:0;background:radial-gradient(circle at 50% 0%,rgba(56,240,152,.06) 0%,transparent 70%);opacity:0;transition:opacity .4s ease}
+.story-card:hover::before{opacity:1}
+.story-card:hover{transform:translateY(-3px);border-color:rgba(56,240,152,.35);box-shadow:0 20px 60px rgba(0,0,0,.4)}
+.story-card.active{border-color:rgba(56,240,152,.5);background:rgba(8,18,40,.85)}
+.sc-glyph{font-size:32px;margin-bottom:14px;display:block;animation:os-float 4s ease-in-out infinite}
+.sc-title{font-family:var(--f-display);font-size:clamp(20px,4vw,28px);font-weight:700;color:#e2eeff;margin-bottom:10px;line-height:1.2}
+.sc-preview{font-size:14px;color:rgba(190,215,255,.55);line-height:1.7}
+.sc-meta{display:flex;gap:10px;margin-top:12px;align-items:center}
+.sc-tag{font-size:10px;padding:3px 10px;border-radius:10px;background:rgba(56,240,152,.1);border:1px solid rgba(56,240,152,.2);color:#38f098}
+.sc-dur{font-size:11px;color:rgba(130,170,220,.45)}
+
+/* Reading view */
+.reading-view{display:none;animation:os-fade-up .5s ease}
+.reading-view.show{display:block}
+.rv-back{display:flex;align-items:center;gap:6px;color:var(--text-2);font-size:13px;cursor:pointer;margin-bottom:24px;transition:color .2s ease}
+.rv-back:hover{color:var(--ec)}
+.rv-title{font-family:var(--f-display);font-size:clamp(24px,5vw,36px);font-weight:800;color:#e2eeff;margin-bottom:20px;line-height:1.2;text-align:center}
+.rv-text{font-family:'DM Sans',sans-serif;font-size:clamp(16px,2.5vw,20px);color:rgba(220,235,255,.88);line-height:2;white-space:pre-line;text-align:center}
+.rv-text .highlight{background:rgba(56,240,152,.2);border-radius:4px;padding:0 2px;transition:background .3s ease}
+.rv-controls{display:flex;gap:12px;justify-content:center;margin-top:28px;flex-wrap:wrap}
+
+/* AI Generate story */
+.gen-section{padding:0 0 20px}
+.gen-card{padding:20px;border-radius:20px;background:rgba(255,255,255,.02);border:1px solid rgba(255,255,255,.06)}
+.gen-title{font-family:var(--f-display);font-size:14px;color:var(--text-2);margin-bottom:12px}
+</style>
+</head>
+<body>
+<div class="star-field" id="starField"></div>
+<div class="story-scroll" id="storyScroll">
+
+  <!-- Story list -->
+  <div id="storyList">
+    <div style="text-align:center;margin-bottom:28px;padding-top:10px">
+      <span style="font-size:36px;display:block;margin-bottom:8px;animation:os-float 3s ease-in-out infinite">✦</span>
+      <div class="os-h2" style="margin-bottom:6px">Story Mode</div>
+      <div style="font-size:14px;color:var(--text-3)">Wisdom in words · Voice-guided stories</div>
+    </div>
+
+    <div id="storyCards"></div>
+
+    <div class="gen-card" style="margin-top:8px">
+      <div class="gen-title">✦ Generate a New Story</div>
+      <input class="os-input" id="genPrompt" placeholder="e.g. 'A story about courage during hard times'" style="margin-bottom:10px" autocomplete="off"/>
+      <div style="display:flex;gap:10px">
+        <button class="os-btn os-btn-solid" id="genBtn" style="flex:1">Create Story</button>
+        <button class="os-btn os-btn-icon" id="genVoice">◎</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Reading view -->
+  <div class="reading-view" id="readingView">
+    <div class="rv-back" onclick="backToList()">← Stories</div>
+    <div class="rv-title" id="rvTitle"></div>
+    <div class="rv-text" id="rvText"></div>
+    <div class="rv-controls">
+      <button class="os-btn os-btn-solid" id="rvPlay">▶ Listen</button>
+      <button class="os-btn" id="rvStop" style="display:none">◼ Stop</button>
+      <button class="os-btn" onclick="backToList()">← All Stories</button>
+    </div>
+  </div>
+</div>
+
+<nav class="os-nav" id="osNav" style="z-index:200"></nav>
+<script src="../modules/auto-voice-trigger.js"></script>
+<script src="../modules/soul-features.js"></script>
+<script src="../modules/page-shell.js"></script>
+<script>
+buildNav('');
+
+// Stars
+const sf=document.getElementById('starField');
+for(let i=0;i<120;i++){
+  const s=document.createElement('div');
+  s.className='star';
+  const x=Math.random()*100,y=Math.random()*100,sz=.4+Math.random()*1.6,d=Math.random()*5;
+  s.style.cssText=`left:${x}%;top:${y}%;width:${sz}px;height:${sz}px;animation-delay:${d}s`;
+  sf.appendChild(s);
+}
+
+const STORIES=[
+  {id:1,glyph:'🌊',title:'The River\'s Wisdom',tag:'Resilience',dur:'2 min',preview:'A river never fights the rocks in its path…',text:`The river does not struggle against the rocks in its path.
+
+It finds a way — always flowing, always moving forward, shaping even the hardest stone with patience and persistence.
+
+Your emotions are like that river. They don't need to be controlled or stopped. They need to be let to flow — gently, honestly, toward the ocean of understanding.
+
+The rocks in your life — the hard moments, the difficult people, the impossible-seeming challenges — they are not obstacles. They are the very things that give the river its voice, its music, its direction.
+
+Let yourself flow today. Around, through, over. You will find your sea.`},
+  {id:2,glyph:'🌟',title:'The Lighthouse',tag:'Hope',dur:'3 min',preview:'There was once a lighthouse keeper at the edge of the world…',text:`There was once a lighthouse keeper who stood at the edge of the world, guiding ships through the darkest storms.
+
+Each night, the beacon turned — not just for the ships, but as a reminder to himself: even in the deepest darkness, a single light is enough.
+
+The storms came. They always do. Waves that seemed like mountains. Winds that bent even the strongest trees. But the lighthouse stood.
+
+Not because it was made of stone alone, but because someone kept the light burning.
+
+You are that lighthouse. Your warmth, your presence — it guides more people than you know.
+
+Even when the fog feels thick and the storm feels close, you are still shining. Keep your light on.`},
+  {id:3,glyph:'🌱',title:'Seeds of Tomorrow',tag:'Growth',dur:'2 min',preview:'A farmer planted a seed in winter…',text:`A farmer planted a seed in winter — when the ground was cold and nothing seemed possible.
+
+She watered it, believed in it, and waited.
+
+Others laughed. "Nothing grows in winter," they said. "You're wasting your time."
+
+But she knew something they didn't: that roots grow deepest when the surface seems frozen. That preparation happens underground, where no one can see.
+
+Spring came, as it always does. And where there was emptiness, there was now life.
+
+Every effort you've made in hard times is a seed waiting to bloom. Every prayer in the dark, every step taken on trembling legs, every word written through tears — they are all seeds.
+
+Trust the season. Your spring is coming.`},
+  {id:4,glyph:'⭐',title:'The Night Sky',tag:'Perspective',dur:'2 min',preview:'Every star you see is a sun in someone else\'s sky…',text:`Every star you see tonight is a sun in someone else's sky.
+
+It burns with the same intensity as ours. It warms its own worlds. It has its own stories, its own gravity, its own wonder.
+
+And from where those distant planets stand, our own sun is just another star — a tiny point of light in an infinite canvas.
+
+You are that star.
+
+From where you stand, you may feel small. Ordinary. Just one among billions. But from somewhere in this universe — from someone's perspective — your light is the one that guides them home.
+
+Shine not to be seen, but because it is your nature. The cosmos needs your particular frequency of light.`},
+];
+
+function renderStories(){
+  document.getElementById('storyCards').innerHTML=STORIES.map((s,i)=>`
+    <div class="story-card" onclick="readStory(${s.id})" style="animation-delay:${i*.08}s;animation:os-fade-up .5s ease ${i*.08}s both">
+      <span class="sc-glyph" style="animation-delay:${i*.3}s">${s.glyph}</span>
+      <div class="sc-title">${s.title}</div>
+      <div class="sc-preview">${s.preview}</div>
+      <div class="sc-meta">
+        <span class="sc-tag">${s.tag}</span>
+        <span class="sc-dur">~${s.dur}</span>
+      </div>
+    </div>
+  `).join('');
+}
+renderStories();
+
+let _speaking=false, _utt=null;
+
+function readStory(id){
+  const s=STORIES.find(x=>x.id===id)||{title:'Story',text:'Once upon a time…'};
+  document.getElementById('rvTitle').textContent=s.title;
+  document.getElementById('rvText').textContent=s.text;
+  document.getElementById('storyList').style.display='none';
+  document.getElementById('readingView').classList.add('show');
+  stopNarration();
+}
+
+function backToList(){
+  stopNarration();
+  document.getElementById('readingView').classList.remove('show');
+  document.getElementById('storyList').style.display='block';
+}
+
+function playNarration(){
+  if(!('speechSynthesis' in window)){showToast('Voice not supported','error');return;}
+  stopNarration();
+  const text=document.getElementById('rvTitle').textContent+'. '+document.getElementById('rvText').textContent;
+  _utt=new SpeechSynthesisUtterance(text);
+  _utt.rate=0.82; _utt.pitch=1.06;
+  _utt.onend=stopNarration;
+  speechSynthesis.speak(_utt);
+  _speaking=true;
+  document.getElementById('rvPlay').style.display='none';
+  document.getElementById('rvStop').style.display='block';
+}
+
+function stopNarration(){
+  speechSynthesis.cancel();
+  _speaking=false;
+  document.getElementById('rvPlay').style.display='block';
+  document.getElementById('rvStop').style.display='none';
+}
+
+document.getElementById('rvPlay').addEventListener('click',playNarration);
+document.getElementById('rvStop').addEventListener('click',stopNarration);
+
+// Generate AI story
+async function genStory(){
+  const prompt=document.getElementById('genPrompt').value.trim();
+  if(!prompt){showToast('Describe the story you want','error');return;}
+  const btn=document.getElementById('genBtn');
+  btn.textContent='Creating…'; btn.disabled=true;
+  const res=await soulAPI(`Write a short, beautiful, wise story (3-4 paragraphs) about: "${prompt}". Make it emotionally resonant and uplifting. Use poetic, flowing language. No dialogue-heavy format.`,'STORY_WRITER');
+  btn.textContent='Create Story'; btn.disabled=false;
+  if(!res.response){showToast('Could not generate story','error');return;}
+  const newStory={id:Date.now(),glyph:'✦',title:prompt.slice(0,40),tag:'Custom',dur:'2 min',preview:res.response.slice(0,80)+'…',text:res.response};
+  STORIES.unshift(newStory);
+  renderStories();
+  showToast('Story created!','success');
+  readStory(newStory.id);
+}
+
+document.getElementById('genBtn').addEventListener('click',genStory);
+document.getElementById('genVoice').addEventListener('click',()=>{
+  VoiceSystem.show();
+  VoiceSystem.onTranscript(t=>{document.getElementById('genPrompt').value=t;VoiceSystem.hide();genStory();});
+});
+
+window.readStory=readStory; window.backToList=backToList;
+</script>
+</body>
+</html>

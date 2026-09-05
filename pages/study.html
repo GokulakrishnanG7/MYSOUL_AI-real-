@@ -1,0 +1,70 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/><meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>Study Guidance — MySoul AI</title>
+<link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=DM+Sans:wght@300;400;500&family=JetBrains+Mono:wght@300;400&display=swap" rel="stylesheet"/>
+<link rel="stylesheet" href="../modules/soul-os.css"/>
+<style>
+.page-input-section{padding:0 20px 20px}
+.result-section{padding:0 20px 20px;display:none;animation:os-fade-up .5s ease}
+.result-section.show{display:block}
+.result-card{padding:20px;border-radius:18px;background:rgba(0,200,255,.06);border:1px solid rgba(0,200,255,.2);margin-bottom:16px}
+.result-title{font-family:var(--f-display);font-size:13px;letter-spacing:.1em;color:rgb(0,200,255);margin-bottom:10px}
+.result-body{font-size:14px;color:var(--text-1);line-height:1.75}
+.steps-list{counter-reset:steps}
+.step-item{display:flex;gap:12px;margin-bottom:14px;align-items:flex-start}
+.step-num{width:28px;height:28px;border-radius:50%;background:rgba(0,200,255,.15);border:1px solid rgba(0,200,255,.4);color:rgb(0,200,255);font-family:var(--f-display);font-size:12px;font-weight:700;display:flex;align-items:center;justify-content:center;flex-shrink:0}
+.step-text{font-size:14px;color:var(--text-1);line-height:1.6;padding-top:4px}
+</style>
+</head>
+<body>
+<div class="os-bg"></div>
+<canvas class="os-bg-canvas" id="bgCanvas"></canvas>
+<div class="os-page">
+  <div class="os-page-header">
+    <div>
+      <div class="os-page-title">📚 Study Guidance</div>
+      <div class="os-page-subtitle">AI-powered guidance</div>
+    </div>
+    <a href="launcher.html" class="os-back-btn">⬡</a>
+  </div>
+  <div class="page-input-section">
+    <textarea class="os-input os-textarea" id="pageInput" placeholder="What subject or topic do you need help with?&#10;e.g. 'Calculus integration for my exam next week'" style="min-height:110px;line-height:1.6"></textarea>
+    <div style="display:flex;gap:10px;margin-top:12px">
+      <button class="os-btn os-btn-solid" id="pageSubmit" style="flex:1">📚 Get Guidance</button>
+      <button class="os-btn os-btn-icon" id="pageVoice">◎</button>
+    </div>
+  </div>
+  <div class="result-section" id="resultSection">
+    <div class="result-card">
+      <div class="result-title">◈ Soul Guidance</div>
+      <div class="result-body" id="resultBody"></div>
+    </div>
+  </div>
+</div>
+<nav class="os-nav" id="osNav"></nav>
+<script src="../modules/auto-voice-trigger.js"></script>
+<script src="../modules/soul-features.js"></script>
+<script src="../modules/page-shell.js"></script>
+<script>
+buildNav('');buildParticles('bgCanvas','60','0,200,255');
+async function submit(){
+  const t=document.getElementById('pageInput').value.trim();
+  if(!t){showToast('Please enter something','error');return;}
+  const section=document.getElementById('resultSection');
+  const body=document.getElementById('resultBody');
+  section.classList.add('show');
+  setLoading(body,true,'Generating guidance…');
+  const res=await soulAPI(t,'STUDY_GUIDANCE');
+  body.innerHTML=formatResponse(res.response||'I\'m here to help. Please try again in a moment.');
+}
+document.getElementById('pageSubmit').addEventListener('click',submit);
+document.getElementById('pageInput').addEventListener('keydown',e=>{if(e.key==='Enter'&&e.ctrlKey)submit();});
+document.getElementById('pageVoice').addEventListener('click',()=>{
+  VoiceSystem.show();
+  VoiceSystem.onTranscript(t=>{document.getElementById('pageInput').value=t;VoiceSystem.hide();submit();});
+});
+</script>
+</body>
+</html>

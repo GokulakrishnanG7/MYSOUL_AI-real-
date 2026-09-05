@@ -1,0 +1,310 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/><meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>Emotion Analysis — MySoul AI</title>
+<link rel="preconnect" href="https://fonts.googleapis.com"/>
+<link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=DM+Sans:wght@300;400;500&family=JetBrains+Mono:wght@300;400&display=swap" rel="stylesheet"/>
+<link rel="stylesheet" href="../modules/soul-os.css"/>
+<style>
+.emo-hero { padding: 0 20px; display: flex; flex-direction: column; align-items: center; gap: 20px; margin-bottom: 24px; }
+
+.emo-orb-stage { position: relative; width: 200px; height: 200px; flex-shrink: 0; }
+.eo-ring { position: absolute; border-radius: 50%; border: 1px solid; transition: all 1.2s ease; }
+.eo-ring-1 { inset: 0; border-color: rgba(var(--ec-rgb),.4); animation: eoSpin1 8s linear infinite; }
+.eo-ring-2 { inset: 12px; border-color: rgba(var(--ec-rgb),.2); animation: eoSpin1 12s linear infinite reverse; }
+.eo-ring-3 { inset: 24px; border-color: rgba(var(--ec-rgb),.1); animation: eoSpin1 16s linear infinite; }
+@keyframes eoSpin1 { to { transform: rotate(360deg); } }
+.eo-glow {
+  position: absolute; inset: 0; border-radius: 50%;
+  background: radial-gradient(circle, rgba(var(--ec-rgb),.22) 0%, transparent 65%);
+  transition: all 1.5s ease;
+}
+.eo-core {
+  position: absolute; top: 50%; left: 50%; transform: translate(-50%,-50%);
+  width: 100px; height: 100px; border-radius: 50%;
+  background: rgba(var(--ec-rgb),.08);
+  border: 2px solid rgba(var(--ec-rgb),.5);
+  display: flex; align-items: center; justify-content: center;
+  font-size: 38px;
+  box-shadow: 0 0 40px rgba(var(--ec-rgb),.3);
+  animation: os-breathe 3s ease-in-out infinite;
+  transition: all 1s ease;
+}
+
+.emo-display { text-align: center; }
+.emo-main-label { font-family: var(--f-display); font-size: 32px; font-weight: 800; color: var(--ec); transition: all .8s ease; letter-spacing: .04em; }
+.emo-main-desc { font-size: 14px; color: var(--text-2); margin-top: 4px; transition: all .8s ease; }
+
+/* Intensity */
+.intensity-wrap { width: 100%; max-width: 360px; }
+.intensity-label-row { display: flex; justify-content: space-between; font-size: 11px; color: var(--text-3); margin-bottom: 8px; }
+.intensity-track { height: 8px; background: rgba(var(--ec-rgb),.1); border-radius: 4px; overflow: hidden; }
+.intensity-fill { height: 100%; background: linear-gradient(90deg, rgba(var(--ec-rgb),.5), var(--ec)); border-radius: 4px; transition: width 1.2s var(--ease-out-expo); }
+
+/* Emotion chips */
+.emo-chips { display: flex; flex-wrap: wrap; gap: 8px; justify-content: center; padding: 0 20px; margin-bottom: 20px; }
+.emo-chip {
+  padding: 7px 16px; border-radius: 20px; font-size: 12px;
+  background: rgba(255,255,255,.03);
+  border: 1px solid rgba(255,255,255,.08);
+  color: var(--text-2); cursor: pointer;
+  transition: all .3s ease;
+}
+.emo-chip:hover { transform: scale(1.05); }
+.emo-chip.selected { border-color: rgba(var(--chip-rgb),.6); background: rgba(var(--chip-rgb),.12); color: rgb(var(--chip-rgb)); }
+
+/* Input section */
+.input-section { padding: 0 20px; margin-bottom: 20px; }
+.input-row { display: flex; gap: 10px; }
+.emo-input-wrap { flex: 1; position: relative; }
+.emo-text-input {
+  width: 100%; padding: 14px 50px 14px 18px;
+  background: rgba(var(--ec-rgb),.05);
+  border: 1px solid rgba(var(--ec-rgb),.2);
+  border-radius: 16px; color: var(--text-1); font-size: 14px;
+  outline: none; transition: all .25s ease;
+}
+.emo-text-input:focus { border-color: rgba(var(--ec-rgb),.5); box-shadow: 0 0 16px rgba(var(--ec-rgb),.12); }
+.emo-text-input::placeholder { color: var(--text-3); }
+.emo-mic-btn {
+  position: absolute; right: 10px; top: 50%; transform: translateY(-50%);
+  width: 34px; height: 34px; border-radius: 50%;
+  background: rgba(var(--ec-rgb),.1);
+  border: 1px solid rgba(var(--ec-rgb),.3);
+  color: var(--ec); font-size: 14px; cursor: pointer;
+  transition: all .25s ease;
+}
+.emo-mic-btn:hover { background: rgba(var(--ec-rgb),.22); }
+.emo-analyze-btn {
+  padding: 0 22px; height: 52px; border-radius: 16px;
+  background: rgba(var(--ec-rgb),.12);
+  border: 1px solid rgba(var(--ec-rgb),.4);
+  color: var(--ec); font-family: var(--f-display);
+  font-size: 13px; cursor: pointer; white-space: nowrap;
+  transition: all .3s ease;
+}
+.emo-analyze-btn:hover { background: rgba(var(--ec-rgb),.25); box-shadow: 0 0 20px rgba(var(--ec-rgb),.35); }
+
+/* AI Response card */
+.ai-response-card {
+  margin: 0 20px 20px;
+  padding: 18px 20px;
+  border-radius: 18px;
+  background: rgba(var(--ec-rgb),.04);
+  border: 1px solid rgba(var(--ec-rgb),.15);
+  min-height: 80px;
+  transition: all .5s ease;
+  display: none;
+}
+.ai-response-card.visible { display: block; animation: os-fade-up .4s ease; }
+.ai-resp-label { font-size: 10px; letter-spacing: .14em; color: var(--ec); text-transform: uppercase; margin-bottom: 10px; }
+.ai-resp-text { font-size: 14px; color: var(--text-1); line-height: 1.7; }
+
+/* History strip */
+.emo-history { padding: 0 20px; }
+.history-strip { display: flex; gap: 8px; overflow-x: auto; padding-bottom: 8px; scrollbar-width: none; }
+.history-strip::-webkit-scrollbar { display: none; }
+.hs-item { flex-shrink: 0; padding: 8px 12px; border-radius: 12px; background: rgba(255,255,255,.025); border: 1px solid rgba(255,255,255,.06); text-align: center; min-width: 70px; cursor: default; }
+.hs-emoji { font-size: 18px; display: block; margin-bottom: 3px; }
+.hs-label { font-size: 9px; color: var(--text-3); text-transform: capitalize; }
+.hs-time { font-size: 9px; color: var(--text-3); opacity: .6; }
+
+/* Bg color shift */
+body { transition: background .8s ease; }
+</style>
+</head>
+<body>
+<div class="os-bg" id="osBg"></div>
+<canvas class="os-bg-canvas" id="bgCanvas"></canvas>
+
+<div class="os-page">
+  <div class="os-page-header">
+    <div>
+      <div class="os-page-title">Emotion Analysis</div>
+      <div class="os-page-subtitle">How are you feeling right now?</div>
+    </div>
+    <a href="launcher.html" class="os-back-btn">⬡</a>
+  </div>
+
+  <!-- Orb -->
+  <div class="emo-hero">
+    <div class="emo-orb-stage">
+      <div class="eo-ring eo-ring-1"></div>
+      <div class="eo-ring eo-ring-2"></div>
+      <div class="eo-ring eo-ring-3"></div>
+      <div class="eo-glow" id="eoGlow"></div>
+      <div class="eo-core" id="eoCore"><span id="eoEmoji">🤖</span></div>
+    </div>
+    <div class="emo-display">
+      <div class="emo-main-label" id="emoMainLabel">Neutral</div>
+      <div class="emo-main-desc" id="emoMainDesc">Tap a feeling or type below</div>
+    </div>
+    <div class="intensity-wrap">
+      <div class="intensity-label-row">
+        <span>INTENSITY</span>
+        <span id="intPct">50%</span>
+      </div>
+      <div class="intensity-track"><div class="intensity-fill" id="intFill" style="width:50%"></div></div>
+    </div>
+  </div>
+
+  <!-- Emotion chips -->
+  <div class="emo-chips" id="emoChips">
+    <div class="emo-chip" data-emo="happy" data-rgb="255,218,32" style="--chip-rgb:255,218,32">😄 Happy</div>
+    <div class="emo-chip" data-emo="sad" data-rgb="91,141,238" style="--chip-rgb:91,141,238">😢 Sad</div>
+    <div class="emo-chip" data-emo="angry" data-rgb="255,64,96" style="--chip-rgb:255,64,96">😠 Angry</div>
+    <div class="emo-chip" data-emo="anxious" data-rgb="168,85,247" style="--chip-rgb:168,85,247">😰 Anxious</div>
+    <div class="emo-chip" data-emo="excited" data-rgb="255,159,56" style="--chip-rgb:255,159,56">🤩 Excited</div>
+    <div class="emo-chip" data-emo="calm" data-rgb="56,240,152" style="--chip-rgb:56,240,152">😌 Calm</div>
+    <div class="emo-chip" data-emo="love" data-rgb="255,107,160" style="--chip-rgb:255,107,160">🥰 Love</div>
+    <div class="emo-chip" data-emo="neutral" data-rgb="0,200,255" style="--chip-rgb:0,200,255">🤖 Neutral</div>
+  </div>
+
+  <!-- Input -->
+  <div class="input-section">
+    <div class="input-row">
+      <div class="emo-input-wrap">
+        <input class="emo-text-input" id="emoInput" type="text" placeholder="Describe how you feel… or type anything" autocomplete="off"/>
+        <button class="emo-mic-btn" id="emoMicBtn" title="Voice input">◎</button>
+      </div>
+      <button class="emo-analyze-btn" id="analyzeBtn">Analyze →</button>
+    </div>
+  </div>
+
+  <!-- AI Response -->
+  <div class="ai-response-card" id="aiRespCard">
+    <div class="ai-resp-label">◈ Soul Response</div>
+    <div class="ai-resp-text" id="aiRespText"></div>
+  </div>
+
+  <!-- History -->
+  <div class="emo-history">
+    <div class="os-label" style="margin-bottom:10px">Recent Emotions</div>
+    <div class="history-strip" id="histStrip">
+      <div style="font-size:12px;color:var(--text-3);padding:8px">No history yet</div>
+    </div>
+  </div>
+</div>
+
+<nav class="os-nav" id="osNav"></nav>
+
+<script src="../modules/auto-voice-trigger.js"></script>
+<script src="../modules/soul-features.js"></script>
+<script src="../modules/page-shell.js"></script>
+<script>
+buildNav('emotion');
+buildParticles('bgCanvas');
+
+const EMAP = {
+  happy:   {emoji:'😄',rgb:'255,218,32',label:'Happy',desc:'Warmth and positivity radiate from you',int:80},
+  sad:     {emoji:'😢',rgb:'91,141,238',label:'Sad',desc:'A tender moment of feeling',int:65},
+  angry:   {emoji:'😠',rgb:'255,64,96',label:'Angry',desc:'Intense energy seeking expression',int:88},
+  anxious: {emoji:'😰',rgb:'168,85,247',label:'Anxious',desc:'The mind is processing uncertainty',int:75},
+  excited: {emoji:'🤩',rgb:'255,159,56',label:'Excited',desc:'Energy in full motion',int:90},
+  calm:    {emoji:'😌',rgb:'56,240,152',label:'Calm',desc:'Beautiful stillness surrounds you',int:30},
+  love:    {emoji:'🥰',rgb:'255,107,160',label:'Love',desc:'Heart wide open and glowing',int:92},
+  neutral: {emoji:'🤖',rgb:'0,200,255',label:'Neutral',desc:'Balanced and centered',int:50},
+  stressed:{emoji:'😰',rgb:'255,64,96',label:'Stressed',desc:'Pressure building up',int:85},
+  fear:    {emoji:'😨',rgb:'168,85,247',label:'Fearful',desc:'Processing something uncertain',int:72},
+  joy:     {emoji:'😊',rgb:'255,224,64',label:'Joy',desc:'Pure light emanates from you',int:85},
+};
+
+function detectEmotion(text) {
+  text = text.toLowerCase();
+  if(/happy|joy|great|amazing|wonderful|fantastic|awesome|lovely|good|bright/.test(text)) return 'happy';
+  if(/sad|depress|cry|miss|alone|lonely|hurt|upset|down|lost/.test(text)) return 'sad';
+  if(/angry|anger|furious|mad|rage|hate|irritat/.test(text)) return 'angry';
+  if(/anxious|anxiety|worry|nervous|panic|scared|afraid|stress|overwhelm/.test(text)) return 'anxious';
+  if(/excited|can\'t wait|thrilled|pumped|hyped|wow|incredible|stoked/.test(text)) return 'excited';
+  if(/calm|peaceful|relax|tranquil|seren|still|quiet/.test(text)) return 'calm';
+  if(/love|loved|heart|affection|adore/.test(text)) return 'love';
+  return 'neutral';
+}
+
+function applyEmotion(key) {
+  const e = EMAP[key] || EMAP.neutral;
+  document.documentElement.style.setProperty('--ec-rgb', e.rgb);
+  document.documentElement.style.setProperty('--ec', `rgb(${e.rgb})`);
+  document.getElementById('eoEmoji').textContent = e.emoji;
+  document.getElementById('emoMainLabel').textContent = e.label;
+  document.getElementById('emoMainDesc').textContent = e.desc;
+  document.getElementById('intFill').style.width = e.int + '%';
+  document.getElementById('intPct').textContent = e.int + '%';
+  document.querySelectorAll('.emo-chip').forEach(c => {
+    c.classList.toggle('selected', c.dataset.emo === key);
+  });
+}
+
+async function analyze() {
+  const text = document.getElementById('emoInput').value.trim();
+  if(!text) { showToast('Type something to analyze','error'); return; }
+  const detected = detectEmotion(text);
+  applyEmotion(detected);
+
+  const card = document.getElementById('aiRespCard');
+  const resp = document.getElementById('aiRespText');
+  card.classList.add('visible');
+  resp.innerHTML = '<div class="os-loading"><div class="os-spinner"></div><span>Feeling into your words…</span></div>';
+
+  // Save to history
+  const hist = JSON.parse(localStorage.getItem('ms_hist')||'[]');
+  hist.unshift({emotion: detected, time: Date.now(), date: new Date().toISOString()});
+  localStorage.setItem('ms_hist', JSON.stringify(hist.slice(0,300)));
+  renderHistory();
+
+  const result = await soulAPI(text, 'EMOTION_ANALYSIS');
+  const response = result.response || getFallback(detected);
+  resp.innerHTML = formatResponse(response);
+  showToast('Emotion detected: ' + detected.toUpperCase());
+}
+
+function getFallback(emo) {
+  const FB = {
+    happy: "Your joy is luminous — it's one of the most beautiful things in the world. Cherish this feeling and let it guide your actions today.",
+    sad: "I feel the weight in your words, and I want you to know — you don't have to carry this alone. Sadness is a teacher. What is it telling you?",
+    angry: "Your intensity tells me something deeply important happened. Your feelings are completely valid. Let's breathe through this together.",
+    anxious: "Anxiety is just the mind trying to protect what matters most. You're safe here. What's the one thing you can do right now?",
+    excited: "This energy you carry is electric! Something wonderful is clearly moving through you. Capture this momentum.",
+    calm: "There's a beautiful stillness in you right now. Rest in it. You don't need to do anything — just be.",
+    love: "Love radiates from your every word. It's the most powerful force there is. Let it fill every corner of your day.",
+    neutral: "You're in a place of balance — a perfect state to begin anything. What would you like to explore today?",
+  };
+  return FB[emo] || FB.neutral;
+}
+
+function renderHistory() {
+  const hist = JSON.parse(localStorage.getItem('ms_hist')||'[]');
+  const strip = document.getElementById('histStrip');
+  if(!hist.length) return;
+  strip.innerHTML = hist.slice(0,15).map(h=>{
+    const e = EMAP[h.emotion]||EMAP.neutral;
+    const t = new Date(h.time).toLocaleTimeString('en-US',{hour:'2-digit',minute:'2-digit'});
+    return `<div class="hs-item"><span class="hs-emoji">${e.emoji}</span><div class="hs-label">${e.label}</div><div class="hs-time">${t}</div></div>`;
+  }).join('');
+}
+renderHistory();
+
+// Chips
+document.querySelectorAll('.emo-chip').forEach(c=>{
+  c.addEventListener('click',()=>{
+    applyEmotion(c.dataset.emo);
+    document.getElementById('emoInput').value='I am feeling '+c.dataset.emo;
+  });
+});
+
+document.getElementById('analyzeBtn').addEventListener('click', analyze);
+document.getElementById('emoInput').addEventListener('keydown', e=>{ if(e.key==='Enter') analyze(); });
+
+// Voice input
+document.getElementById('emoMicBtn').addEventListener('click',()=>{
+  VoiceSystem.show();
+  VoiceSystem.onTranscript(t=>{
+    document.getElementById('emoInput').value=t;
+    VoiceSystem.hide();
+    analyze();
+  });
+});
+</script>
+</body>
+</html>

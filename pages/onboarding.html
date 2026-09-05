@@ -1,0 +1,555 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="dark">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>MySoul AI — Welcome</title>
+<link rel="preconnect" href="https://fonts.googleapis.com"/>
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin/>
+<link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=DM+Sans:ital,wght@0,300;0,400;0,500;1,300&family=JetBrains+Mono:wght@300;400&display=swap" rel="stylesheet"/>
+<style>
+:root {
+  --gold: #FFB347;
+  --teal: #00E5CC;
+  --purple: #6B3FA0;
+  --bg: #1A0A2E;
+  --bg2: #0d0620;
+  --text: #e8e0ff;
+  --text2: rgba(200,185,255,0.6);
+  --text3: rgba(160,140,220,0.4);
+  --f-display: 'Syne', sans-serif;
+  --f-body: 'DM Sans', sans-serif;
+  --f-mono: 'JetBrains Mono', monospace;
+}
+*, *::before, *::after { box-sizing:border-box; margin:0; padding:0; }
+html, body { width:100%; height:100%; overflow:hidden; }
+body { font-family: var(--f-body); background: var(--bg2); color: var(--text); -webkit-font-smoothing: antialiased; }
+button { border:none; background:none; font-family:inherit; cursor:pointer; }
+input, select { font-family:inherit; cursor:text; }
+
+/* ── BACKGROUND ── */
+.bg {
+  position:fixed; inset:0; z-index:0;
+  background:
+    radial-gradient(ellipse 80% 60% at 20% 15%, rgba(107,63,160,0.4) 0%, transparent 55%),
+    radial-gradient(ellipse 60% 50% at 80% 85%, rgba(0,229,204,0.15) 0%, transparent 50%),
+    radial-gradient(ellipse 100% 100% at 50% 50%, #1A0A2E 20%, #0d0620 100%);
+}
+.bg-stars { position:fixed; inset:0; z-index:1; pointer-events:none; overflow:hidden; }
+.star { position:absolute; border-radius:50%; background:rgba(255,255,255,0.6); animation:twinkle linear infinite; }
+@keyframes twinkle { 0%,100%{opacity:.2;transform:scale(1)} 50%{opacity:.9;transform:scale(1.3)} }
+
+/* ── PARTICLE CANVAS ── */
+#onboardCanvas { position:fixed; inset:0; z-index:2; pointer-events:none; }
+
+/* ── MAIN WRAPPER ── */
+.ob-wrap {
+  position:relative; z-index:10;
+  width:100%; height:100%;
+  display:flex; flex-direction:column; align-items:center; justify-content:center;
+  padding:24px; gap:0;
+  overflow-y:auto;
+}
+
+/* ── STEP SYSTEM ── */
+.step { display:none; flex-direction:column; align-items:center; gap:28px; width:100%; max-width:520px; animation:stepIn .7s cubic-bezier(0.16,1,0.3,1) both; }
+.step.active { display:flex; }
+@keyframes stepIn { from{opacity:0;transform:translateY(32px)} to{opacity:1;transform:translateY(0)} }
+
+/* ── LOGO RING ── */
+.logo-wrap { position:relative; width:120px; height:120px; flex-shrink:0; }
+.logo-ring {
+  position:absolute; inset:0; border-radius:50%;
+  background: conic-gradient(from 0deg, #FFB347, #FF6B6B, #A855F7, #00E5CC, #00C8FF, #FFB347);
+  animation: ringRotate 3s linear infinite;
+  padding:3px;
+}
+.logo-ring-inner {
+  width:100%; height:100%; border-radius:50%;
+  background:var(--bg2);
+  display:flex; align-items:center; justify-content:center;
+}
+.logo-core {
+  width:82px; height:82px; border-radius:50%;
+  background:radial-gradient(circle at 35% 35%, rgba(0,229,204,0.5), rgba(107,63,160,0.8));
+  display:flex; align-items:center; justify-content:center;
+  font-size:32px;
+  box-shadow:0 0 40px rgba(0,229,204,0.3), inset 0 0 20px rgba(0,229,204,0.1);
+  animation:coreBreath 3s ease-in-out infinite;
+}
+@keyframes ringRotate { to { transform:rotate(360deg); } }
+@keyframes coreBreath { 0%,100%{box-shadow:0 0 40px rgba(0,229,204,.3)} 50%{box-shadow:0 0 70px rgba(0,229,204,.6), 0 0 120px rgba(107,63,160,.3)} }
+
+/* ── LOGO GLOW HALO ── */
+.logo-halo {
+  position:absolute; inset:-20px; border-radius:50%;
+  background:radial-gradient(circle, rgba(0,229,204,0.12) 0%, transparent 70%);
+  animation:haloBreath 3s ease-in-out infinite;
+  pointer-events:none;
+}
+@keyframes haloBreath { 0%,100%{opacity:.5;transform:scale(1)} 50%{opacity:1;transform:scale(1.15)} }
+
+/* ── HEADLINE ── */
+.ob-headline {
+  font-family:var(--f-display); font-size:clamp(22px,5vw,32px); font-weight:800;
+  text-align:center; line-height:1.3; color:var(--text);
+  text-shadow:0 0 40px rgba(0,229,204,0.2);
+}
+.ob-sub { font-size:14px; color:var(--text2); text-align:center; line-height:1.6; max-width:380px; }
+
+/* ── VOICE INPUT ZONE ── */
+.voice-zone { position:relative; display:flex; flex-direction:column; align-items:center; gap:20px; width:100%; }
+.mic-btn-wrap { position:relative; }
+.mic-ring {
+  position:absolute; inset:-12px; border-radius:50%;
+  border:2px solid var(--teal); opacity:0;
+  animation:micPulse 2s ease-out infinite;
+  pointer-events:none;
+}
+.mic-ring:nth-child(2) { inset:-24px; animation-delay:.5s; }
+.mic-ring:nth-child(3) { inset:-36px; animation-delay:1s; }
+.mic-ring.active { opacity:1 !important; animation-duration:1s !important; }
+@keyframes micPulse { 0%{opacity:.7;transform:scale(.8)} 100%{opacity:0;transform:scale(1.3)} }
+
+.mic-btn-main {
+  width:72px; height:72px; border-radius:50%;
+  background:linear-gradient(135deg, rgba(0,229,204,0.3), rgba(107,63,160,0.4));
+  border:2px solid rgba(0,229,204,0.5);
+  display:flex; align-items:center; justify-content:center;
+  font-size:26px; transition:all .3s ease;
+  box-shadow:0 0 30px rgba(0,229,204,0.2);
+  cursor:pointer;
+}
+.mic-btn-main:hover { transform:scale(1.08); box-shadow:0 0 50px rgba(0,229,204,0.4); }
+.mic-btn-main.recording { background:linear-gradient(135deg,rgba(255,100,100,0.4),rgba(255,60,60,0.3)); border-color:rgba(255,80,80,0.7); box-shadow:0 0 50px rgba(255,80,80,0.4); }
+
+.mic-label { font-size:11px; color:var(--text3); letter-spacing:.18em; font-family:var(--f-mono); }
+
+/* ── TEXT INPUT ── */
+.ob-divider { display:flex; align-items:center; gap:12px; width:100%; }
+.ob-divider::before, .ob-divider::after { content:''; flex:1; height:1px; background:rgba(255,255,255,0.08); }
+.ob-divider span { font-size:11px; color:var(--text3); letter-spacing:.1em; }
+
+.ob-input-wrap { position:relative; width:100%; }
+.ob-input {
+  width:100%; padding:16px 20px; padding-right:56px;
+  background:rgba(255,255,255,0.04); border:1.5px solid rgba(107,63,160,0.35);
+  border-radius:16px; color:var(--text); font-size:16px; outline:none;
+  transition:all .3s ease;
+}
+.ob-input:focus { border-color:rgba(0,229,204,0.5); background:rgba(0,229,204,0.04); box-shadow:0 0 24px rgba(0,229,204,0.1); }
+.ob-input::placeholder { color:var(--text3); }
+.ob-input-submit {
+  position:absolute; right:10px; top:50%; transform:translateY(-50%);
+  width:36px; height:36px; border-radius:10px;
+  background:linear-gradient(135deg,rgba(0,229,204,0.3),rgba(107,63,160,0.4));
+  border:1px solid rgba(0,229,204,0.3);
+  color:var(--teal); font-size:16px; display:flex; align-items:center; justify-content:center;
+  transition:all .2s; cursor:pointer;
+}
+.ob-input-submit:hover { background:rgba(0,229,204,0.2); box-shadow:0 0 20px rgba(0,229,204,0.2); }
+
+/* ── LANGUAGE SELECTOR ── */
+.lang-grid { display:flex; flex-wrap:wrap; gap:8px; justify-content:center; width:100%; }
+.lang-chip {
+  padding:8px 16px; border-radius:100px; cursor:pointer;
+  background:rgba(255,255,255,0.04); border:1.5px solid rgba(255,255,255,0.08);
+  font-size:13px; color:var(--text2); transition:all .25s ease; display:flex; align-items:center; gap:6px;
+}
+.lang-chip.selected { background:rgba(0,229,204,0.12); border-color:rgba(0,229,204,0.5); color:var(--teal); }
+.lang-chip:hover { border-color:rgba(0,229,204,0.3); color:var(--text); }
+
+/* ── BUTTONS ── */
+.ob-btn {
+  padding:16px 40px; border-radius:14px; cursor:pointer;
+  background:linear-gradient(135deg, rgba(0,229,204,0.2), rgba(107,63,160,0.3));
+  border:1.5px solid rgba(0,229,204,0.4);
+  color:var(--teal); font-family:var(--f-display); font-size:15px; font-weight:700;
+  letter-spacing:.08em; transition:all .3s ease;
+  box-shadow:0 0 30px rgba(0,229,204,0.1);
+}
+.ob-btn:hover { background:linear-gradient(135deg,rgba(0,229,204,0.3),rgba(107,63,160,0.4)); box-shadow:0 0 50px rgba(0,229,204,0.2); transform:translateY(-2px); }
+.ob-btn:disabled { opacity:.4; cursor:not-allowed; transform:none; }
+
+.ob-btn-gold {
+  background:linear-gradient(135deg,rgba(255,179,71,0.25),rgba(255,140,20,0.2));
+  border-color:rgba(255,179,71,0.5); color:var(--gold);
+  box-shadow:0 0 30px rgba(255,179,71,0.1);
+}
+.ob-btn-gold:hover { box-shadow:0 0 50px rgba(255,179,71,0.25); }
+
+/* ── CONFIRMATION CARD ── */
+.confirm-card {
+  background:rgba(0,229,204,0.06); border:1.5px solid rgba(0,229,204,0.2);
+  border-radius:20px; padding:28px; text-align:center; width:100%;
+}
+.confirm-names { display:flex; flex-direction:column; gap:8px; margin:16px 0; }
+.confirm-name-row { display:flex; align-items:center; justify-content:space-between; padding:10px 16px; background:rgba(255,255,255,0.04); border-radius:10px; }
+.confirm-label { font-size:11px; color:var(--text3); letter-spacing:.1em; font-family:var(--f-mono); }
+.confirm-value { font-family:var(--f-display); font-size:18px; font-weight:700; color:var(--teal); }
+.confirm-lang { font-size:13px; color:var(--gold); }
+
+/* ── NAME DISPLAY ── */
+.name-pill {
+  display:inline-block; padding:4px 14px; border-radius:100px;
+  background:rgba(0,229,204,0.12); border:1px solid rgba(0,229,204,0.35);
+  color:var(--teal); font-family:var(--f-display); font-weight:700;
+}
+
+/* ── STEP DOTS ── */
+.step-dots { display:flex; gap:8px; }
+.dot { width:6px; height:6px; border-radius:3px; background:rgba(255,255,255,0.15); transition:all .3s; }
+.dot.active { width:24px; background:var(--teal); box-shadow:0 0 10px var(--teal); }
+
+/* ── TRANSCRIPT DISPLAY ── */
+.transcript-live {
+  min-height:44px; padding:12px 20px; border-radius:12px;
+  background:rgba(255,255,255,0.03); border:1px solid rgba(255,255,255,0.06);
+  font-size:15px; color:var(--text); text-align:center; font-style:italic;
+  color:var(--text2); width:100%;
+}
+
+/* ── AUTH LINK ── */
+.ob-auth-link { font-size:12px; color:var(--text3); text-align:center; }
+.ob-auth-link a { color:var(--teal); text-decoration:none; border-bottom:1px solid rgba(0,229,204,0.3); }
+.ob-auth-link a:hover { color:rgba(0,229,204,0.9); }
+
+/* LOADING OVERLAY */
+.ob-loading { position:fixed; inset:0; z-index:100; background:rgba(13,6,32,0.9); display:none; align-items:center; justify-content:center; flex-direction:column; gap:20px; }
+.ob-loading.show { display:flex; }
+.ob-spin { width:48px; height:48px; border-radius:50%; border:2px solid rgba(0,229,204,0.2); border-top-color:var(--teal); animation:spin .8s linear infinite; }
+@keyframes spin { to{transform:rotate(360deg)} }
+.ob-loading-text { font-family:var(--f-mono); font-size:12px; color:var(--text3); letter-spacing:.15em; }
+</style>
+</head>
+<body>
+
+<div class="bg"></div>
+<div class="bg-stars" id="bgStars"></div>
+<canvas id="onboardCanvas"></canvas>
+
+<div class="ob-loading" id="obLoading">
+  <div class="ob-spin"></div>
+  <div class="ob-loading-text">SETTING UP YOUR SOUL...</div>
+</div>
+
+<div class="ob-wrap">
+
+  <!-- STEP 1: Language -->
+  <div class="step active" id="step1">
+    <div class="logo-wrap">
+      <div class="logo-halo"></div>
+      <div class="logo-ring">
+        <div class="logo-ring-inner">
+          <div class="logo-core">✦</div>
+        </div>
+      </div>
+    </div>
+    <div class="ob-headline">Hello, I'm MySoul AI 🌟</div>
+    <div class="ob-sub">Your emotionally intelligent companion, here to listen, understand, and grow with you. Let's get started.</div>
+
+    <div style="width:100%;text-align:left">
+      <div style="font-size:11px;color:var(--text3);letter-spacing:.14em;font-family:var(--f-mono);margin-bottom:12px;">CHOOSE YOUR LANGUAGE</div>
+      <div class="lang-grid" id="langGrid">
+        <div class="lang-chip selected" data-lang="en">🇬🇧 English</div>
+        <div class="lang-chip" data-lang="ta">🇮🇳 தமிழ்</div>
+        <div class="lang-chip" data-lang="hi">🇮🇳 हिन्दी</div>
+        <div class="lang-chip" data-lang="te">🇮🇳 తెలుగు</div>
+        <div class="lang-chip" data-lang="ml">🇮🇳 മലയാളം</div>
+        <div class="lang-chip" data-lang="kn">🇮🇳 ಕನ್ನಡ</div>
+        <div class="lang-chip" data-lang="fr">🇫🇷 Français</div>
+        <div class="lang-chip" data-lang="es">🇪🇸 Español</div>
+        <div class="lang-chip" data-lang="ar">🇸🇦 العربية</div>
+        <div class="lang-chip" data-lang="zh">🇨🇳 中文</div>
+        <div class="lang-chip" data-lang="ja">🇯🇵 日本語</div>
+        <div class="lang-chip" data-lang="de">🇩🇪 Deutsch</div>
+      </div>
+    </div>
+
+    <button class="ob-btn" id="step1Next">Continue →</button>
+    <div class="ob-auth-link">Already have an account? <a href="auth.html">Sign in</a></div>
+    <div class="step-dots">
+      <div class="dot active"></div><div class="dot"></div><div class="dot"></div>
+    </div>
+  </div>
+
+  <!-- STEP 2: What to call ME (user name) + AI name -->
+  <div class="step" id="step2">
+    <div class="logo-wrap" style="width:80px;height:80px">
+      <div class="logo-halo"></div>
+      <div class="logo-ring">
+        <div class="logo-ring-inner">
+          <div class="logo-core" style="width:54px;height:54px;font-size:22px">✦</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="ob-headline" id="step2Headline">What's your name?</div>
+    <div class="ob-sub">Let me know what to call you — I want our conversations to feel warm and personal.</div>
+
+    <div class="voice-zone">
+      <div class="mic-btn-wrap">
+        <div class="mic-ring" id="mic1r1"></div>
+        <div class="mic-ring" id="mic1r2"></div>
+        <div class="mic-ring" id="mic1r3"></div>
+        <button class="mic-btn-main" id="micBtnUser" title="Speak your name">🎙️</button>
+      </div>
+      <div class="mic-label">TAP TO SPEAK YOUR NAME</div>
+      <div class="transcript-live" id="userTranscript">Waiting for your voice...</div>
+    </div>
+
+    <div class="ob-divider"><span>OR TYPE</span></div>
+
+    <div class="ob-input-wrap">
+      <input class="ob-input" id="userNameInput" placeholder="Enter your name…" maxlength="40" autocomplete="off"/>
+      <button class="ob-input-submit" id="userNameSubmit">→</button>
+    </div>
+
+    <div class="step-dots">
+      <div class="dot"></div><div class="dot active"></div><div class="dot"></div>
+    </div>
+  </div>
+
+  <!-- STEP 3: Name the AI -->
+  <div class="step" id="step3">
+    <div class="logo-wrap" style="width:80px;height:80px">
+      <div class="logo-halo"></div>
+      <div class="logo-ring">
+        <div class="logo-ring-inner">
+          <div class="logo-core" style="width:54px;height:54px;font-size:22px">✦</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="ob-headline">Hi <span class="name-pill" id="displayUserName">friend</span>! 👋<br>What would you like to call me?</div>
+    <div class="ob-sub">Give me a name that feels right to you. I'll be called that in all our conversations.</div>
+
+    <div class="voice-zone">
+      <div class="mic-btn-wrap">
+        <div class="mic-ring" id="mic2r1"></div>
+        <div class="mic-ring" id="mic2r2"></div>
+        <div class="mic-ring" id="mic2r3"></div>
+        <button class="mic-btn-main" id="micBtnAI" title="Speak AI name">🎙️</button>
+      </div>
+      <div class="mic-label">TAP TO SPEAK A NAME</div>
+      <div class="transcript-live" id="aiTranscript">Waiting for your voice...</div>
+    </div>
+
+    <div class="ob-divider"><span>OR TYPE</span></div>
+
+    <div class="ob-input-wrap">
+      <input class="ob-input" id="aiNameInput" placeholder="e.g. Aria, Sol, Nova, Luna…" maxlength="40" autocomplete="off"/>
+      <button class="ob-input-submit" id="aiNameSubmit">→</button>
+    </div>
+
+    <div style="display:flex;flex-wrap:wrap;gap:8px;justify-content:center">
+      <span class="lang-chip" onclick="setAIName('Aria')">Aria</span>
+      <span class="lang-chip" onclick="setAIName('Sol')">Sol</span>
+      <span class="lang-chip" onclick="setAIName('Nova')">Nova</span>
+      <span class="lang-chip" onclick="setAIName('Luna')">Luna</span>
+      <span class="lang-chip" onclick="setAIName('Mira')">Mira</span>
+      <span class="lang-chip" onclick="setAIName('Kai')">Kai</span>
+    </div>
+
+    <div class="step-dots">
+      <div class="dot"></div><div class="dot"></div><div class="dot active"></div>
+    </div>
+  </div>
+
+  <!-- STEP 4: Confirmation -->
+  <div class="step" id="step4">
+    <div class="logo-wrap">
+      <div class="logo-halo"></div>
+      <div class="logo-ring">
+        <div class="logo-ring-inner">
+          <div class="logo-core">✦</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="ob-headline" id="confirmHeadline">Nice to meet you! 🎉</div>
+
+    <div class="confirm-card">
+      <div style="font-size:11px;color:var(--text3);letter-spacing:.14em;font-family:var(--f-mono);margin-bottom:16px">YOUR SOUL SETUP</div>
+      <div class="confirm-names">
+        <div class="confirm-name-row">
+          <span class="confirm-label">YOU ARE</span>
+          <span class="confirm-value" id="finalUserName">–</span>
+        </div>
+        <div class="confirm-name-row">
+          <span class="confirm-label">I AM</span>
+          <span class="confirm-value" id="finalAIName">–</span>
+        </div>
+        <div class="confirm-name-row">
+          <span class="confirm-label">LANGUAGE</span>
+          <span class="confirm-lang" id="finalLang">English</span>
+        </div>
+      </div>
+    </div>
+
+    <button class="ob-btn ob-btn-gold" id="confirmBtn">Begin Our Journey ✦</button>
+    <div class="ob-auth-link">Already have an account? <a href="auth.html">Sign in instead</a></div>
+  </div>
+
+</div>
+
+<script>
+'use strict';
+
+/* ── Stars ── */
+(function(){
+  const container = document.getElementById('bgStars');
+  for(let i=0;i<80;i++){
+    const s=document.createElement('div');
+    s.className='star';
+    const sz=0.5+Math.random()*2;
+    s.style.cssText=`width:${sz}px;height:${sz}px;left:${Math.random()*100}%;top:${Math.random()*100}%;animation-duration:${2+Math.random()*4}s;animation-delay:${Math.random()*4}s;`;
+    container.appendChild(s);
+  }
+})();
+
+/* ── State ── */
+const OB = {
+  lang: 'en',
+  langLabel: 'English',
+  userName: '',
+  aiName: '',
+  step: 1,
+};
+
+/* ── Step Navigation ── */
+function goStep(n) {
+  document.querySelectorAll('.step').forEach(s => s.classList.remove('active'));
+  const el = document.getElementById('step'+n);
+  el?.classList.add('active');
+  OB.step = n;
+}
+
+/* ── Language Selection ── */
+document.querySelectorAll('.lang-chip[data-lang]').forEach(c => {
+  c.addEventListener('click', () => {
+    document.querySelectorAll('.lang-chip[data-lang]').forEach(x => x.classList.remove('selected'));
+    c.classList.add('selected');
+    OB.lang = c.dataset.lang;
+    OB.langLabel = c.textContent.trim();
+  });
+});
+
+document.getElementById('step1Next').addEventListener('click', () => goStep(2));
+
+/* ── User Name Input ── */
+function handleUserName(name) {
+  name = name.trim();
+  if(!name) return;
+  OB.userName = name;
+  document.getElementById('displayUserName').textContent = name;
+  document.getElementById('userNameInput').value = name;
+  setTimeout(()=>goStep(3), 300);
+}
+
+document.getElementById('userNameSubmit').addEventListener('click', () => {
+  handleUserName(document.getElementById('userNameInput').value);
+});
+document.getElementById('userNameInput').addEventListener('keydown', e => {
+  if(e.key==='Enter') handleUserName(e.target.value);
+});
+
+/* ── AI Name ── */
+function setAIName(name) {
+  document.getElementById('aiNameInput').value = name;
+  handleAIName(name);
+}
+
+function handleAIName(name) {
+  name = name.trim();
+  if(!name) return;
+  OB.aiName = name;
+  // Show confirm screen
+  document.getElementById('confirmHeadline').textContent = `Nice to meet you, ${OB.userName}! 🎉`;
+  document.getElementById('finalUserName').textContent = OB.userName;
+  document.getElementById('finalAIName').textContent = OB.aiName;
+  document.getElementById('finalLang').textContent = OB.langLabel;
+  setTimeout(()=>goStep(4), 300);
+}
+
+document.getElementById('aiNameSubmit').addEventListener('click', () => {
+  handleAIName(document.getElementById('aiNameInput').value);
+});
+document.getElementById('aiNameInput').addEventListener('keydown', e => {
+  if(e.key==='Enter') handleAIName(e.target.value);
+});
+
+/* ── Voice Input ── */
+function setupVoice(micBtnId, transcriptId, onResult) {
+  const btn = document.getElementById(micBtnId);
+  const tx  = document.getElementById(transcriptId);
+  if(!btn) return;
+
+  const SR = window.SpeechRecognition || window.webkitSpeechRecognition;
+  if(!SR) {
+    btn.addEventListener('click', () => {
+      tx.textContent = '🎙️ Speech not supported in this browser. Please type instead.';
+    });
+    return;
+  }
+
+  let rec = new SR();
+  rec.lang = OB.lang === 'ta' ? 'ta-IN' : OB.lang === 'hi' ? 'hi-IN' : 'en-US';
+  rec.interimResults = true;
+  let running = false;
+
+  rec.onresult = e => {
+    let interim = '', final = '';
+    for(let i=e.resultIndex;i<e.results.length;i++){
+      const t=e.results[i][0].transcript;
+      if(e.results[i].isFinal) final+=t; else interim+=t;
+    }
+    tx.textContent = final || interim || '...';
+    if(final) { rec.stop(); running=false; btn.classList.remove('recording'); onResult(final.trim()); }
+  };
+  rec.onerror = e => {
+    running=false; btn.classList.remove('recording');
+    tx.textContent = 'Could not hear — please type below.';
+  };
+  rec.onend = () => { running=false; btn.classList.remove('recording'); };
+
+  btn.addEventListener('click', () => {
+    if(running){ rec.stop(); running=false; btn.classList.remove('recording'); return; }
+    running=true; btn.classList.add('recording');
+    tx.textContent = '🔴 Listening...';
+    try { rec.start(); } catch(e){ running=false; btn.classList.remove('recording'); }
+  });
+}
+
+setupVoice('micBtnUser','userTranscript', (name)=>{ handleUserName(name); });
+setupVoice('micBtnAI',  'aiTranscript',  (name)=>{ handleAIName(name); });
+
+/* ── Confirm & Submit ── */
+document.getElementById('confirmBtn').addEventListener('click', async () => {
+  const loading = document.getElementById('obLoading');
+  loading.classList.add('show');
+
+  // Save to localStorage
+  localStorage.setItem('ms_setup', JSON.stringify({
+    user_name: OB.userName,
+    ai_name: OB.aiName,
+    language: OB.lang,
+    lang_label: OB.langLabel,
+  }));
+
+  // Call backend API
+  try {
+    const r = await fetch('/api/auth/setup', {
+      method:'POST',
+      headers:{'Content-Type':'application/json'},
+      body:JSON.stringify({ ai_name: OB.aiName, user_name: OB.userName, language: OB.lang }),
+      signal: AbortSignal.timeout(8000),
+    });
+    // Even if API fails, continue to auth
+  } catch(e) { /* offline — continue */ }
+
+  setTimeout(()=>{ window.location.href='auth.html'; }, 800);
+});
+</script>
+</body>
+</html>

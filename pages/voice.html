@@ -1,0 +1,259 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/><meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>Voice Companion — MySoul AI</title>
+<link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=DM+Sans:wght@300;400;500&family=JetBrains+Mono:wght@300;400&display=swap" rel="stylesheet"/>
+<link rel="stylesheet" href="../modules/soul-os.css"/>
+<style>
+body{overflow:hidden}
+.vc-bg{position:fixed;inset:0;z-index:0;background:radial-gradient(ellipse at 50% 40%,rgba(0,200,255,.08) 0%,transparent 60%),radial-gradient(ellipse at 30% 80%,rgba(168,85,247,.06) 0%,transparent 50%),#05080f;transition:background 1.5s ease}
+.vc-page{position:fixed;inset:0;z-index:2;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:0;padding:0 20px 80px}
+
+/* Orb system */
+.vc-orb-system{position:relative;width:280px;height:280px;flex-shrink:0;margin-bottom:20px}
+.vc-ring{position:absolute;border-radius:50%;border:1px solid;transition:all 1s ease;pointer-events:none}
+.vc-ring-1{inset:0;border-color:rgba(var(--ec-rgb),.25);animation:vcRing1 10s linear infinite}
+.vc-ring-2{inset:20px;border-color:rgba(var(--ec-rgb),.15);animation:vcRing1 15s linear infinite reverse}
+.vc-ring-3{inset:40px;border-color:rgba(var(--ec-rgb),.08);animation:vcRing1 20s linear infinite}
+@keyframes vcRing1{to{transform:rotate(360deg)}}
+.vc-glow{position:absolute;inset:-20px;border-radius:50%;background:radial-gradient(circle,rgba(var(--ec-rgb),.18) 0%,transparent 60%);transition:all 1s ease;animation:vcGlow 4s ease-in-out infinite}
+@keyframes vcGlow{0%,100%{opacity:.6}50%{opacity:1}}
+.vc-canvas{position:absolute;inset:0;border-radius:50%;pointer-events:none;z-index:1}
+.vc-orb{position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);width:130px;height:130px;border-radius:50%;background:rgba(var(--ec-rgb),.07);border:2px solid rgba(var(--ec-rgb),.5);display:flex;align-items:center;justify-content:center;z-index:2;animation:vcOrbBreath 3.5s ease-in-out infinite;transition:all .8s ease;cursor:pointer}
+.vc-orb:hover{transform:translate(-50%,-50%) scale(1.06);box-shadow:0 0 60px rgba(var(--ec-rgb),.6)}
+.vc-orb-inner{width:70px;height:70px;border-radius:50%;background:radial-gradient(circle,rgba(var(--ec-rgb),.25) 0%,transparent 70%);display:flex;align-items:center;justify-content:center;font-size:30px}
+@keyframes vcOrbBreath{0%,100%{box-shadow:0 0 40px rgba(var(--ec-rgb),.3)}50%{box-shadow:0 0 80px rgba(var(--ec-rgb),.65)}}
+.vc-state-listening .vc-orb{animation:vcListen .55s ease-in-out infinite alternate;border-color:rgba(var(--ec-rgb),.9)}
+@keyframes vcListen{from{transform:translate(-50%,-50%) scale(1)}to{transform:translate(-50%,-50%) scale(1.14)}}
+.vc-state-thinking .vc-orb{border-color:rgba(168,85,247,.8);animation:vcThink 1.3s ease-in-out infinite}
+@keyframes vcThink{0%,100%{box-shadow:0 0 30px rgba(168,85,247,.4)}50%{box-shadow:0 0 80px rgba(168,85,247,.9)}}
+.vc-state-speaking .vc-orb{border-color:rgba(255,224,64,.7);animation:vcSpeak .4s ease-in-out infinite alternate}
+@keyframes vcSpeak{from{transform:translate(-50%,-50%) scale(1)}to{transform:translate(-50%,-50%) scale(1.1)}}
+
+/* Orbit particles */
+.vc-orbit{position:absolute;top:50%;left:50%;width:8px;height:8px;border-radius:50%;background:var(--ec);box-shadow:0 0 10px var(--ec);pointer-events:none}
+.vc-orbit-1{animation:vcOrbit1 6s linear infinite;transform-origin:-120px 0}
+.vc-orbit-2{animation:vcOrbit1 9s linear infinite reverse;transform-origin:-145px 0}
+@keyframes vcOrbit1{from{transform:translate(-50%,-50%) rotate(0deg) translateX(120px)}to{transform:translate(-50%,-50%) rotate(360deg) translateX(120px)}}
+
+/* Labels */
+.vc-state-label{font-family:var(--f-display);font-size:13px;letter-spacing:.18em;text-transform:uppercase;color:var(--text-3);transition:all .5s ease;margin-bottom:8px;min-height:20px;text-align:center}
+.vc-transcript{font-size:16px;color:var(--text-1);text-align:center;max-width:400px;min-height:24px;line-height:1.5;transition:all .4s ease;margin-bottom:20px}
+
+/* Equalizer */
+.vc-eq{display:flex;align-items:flex-end;gap:4px;height:40px;margin-bottom:16px;opacity:0;transition:opacity .4s ease}
+.vc-eq.show{opacity:1}
+.vc-eq-bar{width:4px;background:var(--ec);border-radius:3px;animation:vcEqBar .5s ease-in-out infinite alternate}
+@keyframes vcEqBar{from{height:4px;opacity:.3}to{height:32px;opacity:1}}
+
+/* Controls */
+.vc-controls{display:flex;gap:16px;align-items:center}
+.vc-ctrl-btn{width:56px;height:56px;border-radius:50%;display:flex;align-items:center;justify-content:center;cursor:pointer;transition:all .3s ease;font-size:18px}
+.vc-main-btn{width:72px;height:72px;background:rgba(var(--ec-rgb),.15);border:2px solid rgba(var(--ec-rgb),.6);color:var(--ec);font-size:28px;box-shadow:0 0 30px rgba(var(--ec-rgb),.3)}
+.vc-main-btn:hover{background:rgba(var(--ec-rgb),.28);transform:scale(1.08);box-shadow:0 0 50px rgba(var(--ec-rgb),.6)}
+.vc-ctrl-sm{background:rgba(255,255,255,.05);border:1px solid rgba(255,255,255,.1);color:var(--text-2)}
+.vc-ctrl-sm:hover{background:rgba(255,255,255,.1);color:var(--ec)}
+
+/* Chat history strip */
+.vc-chat{position:fixed;bottom:90px;left:0;right:0;z-index:3;max-height:160px;overflow-y:auto;padding:0 20px;scrollbar-width:none;display:flex;flex-direction:column;gap:6px}
+.vc-chat::-webkit-scrollbar{display:none}
+.vc-msg{padding:10px 14px;border-radius:12px;font-size:13px;line-height:1.5;max-width:85%;animation:os-fade-up .3s ease}
+.vc-msg-user{background:rgba(var(--ec-rgb),.1);border:1px solid rgba(var(--ec-rgb),.2);align-self:flex-end;color:var(--ec)}
+.vc-msg-ai{background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.07);align-self:flex-start;color:var(--text-2)}
+
+.vc-wake-hint{position:fixed;top:70px;left:50%;transform:translateX(-50%);font-size:11px;color:var(--text-3);letter-spacing:.1em;text-align:center}
+</style>
+</head>
+<body>
+<div class="vc-bg" id="vcBg"></div>
+<canvas style="position:fixed;inset:0;z-index:1;opacity:.4" id="bgCanvas"></canvas>
+
+<div class="vc-page" id="vcPage">
+  <div class="vc-orb-system">
+    <div class="vc-ring vc-ring-1"></div>
+    <div class="vc-ring vc-ring-2"></div>
+    <div class="vc-ring vc-ring-3"></div>
+    <div class="vc-glow"></div>
+    <canvas class="vc-canvas" id="vcCanvas" width="280" height="280"></canvas>
+    <div class="vc-orbit vc-orbit-1"></div>
+    <div class="vc-orbit vc-orbit-2" style="background:rgba(168,85,247,.8);box-shadow:0 0 8px rgba(168,85,247,.8)"></div>
+    <div class="vc-orb" id="vcOrb" onclick="toggleListening()">
+      <div class="vc-orb-inner" id="vcOrbInner">◎</div>
+    </div>
+  </div>
+
+  <div class="vc-state-label" id="vcStateLabel">Say "Hey Soul" or tap orb</div>
+  <div class="vc-transcript" id="vcTranscript"></div>
+  <div class="vc-eq" id="vcEq">
+    <div class="vc-eq-bar" style="animation-delay:0.00s"></div><div class="vc-eq-bar" style="animation-delay:0.05s"></div><div class="vc-eq-bar" style="animation-delay:0.10s"></div><div class="vc-eq-bar" style="animation-delay:0.15s"></div><div class="vc-eq-bar" style="animation-delay:0.20s"></div><div class="vc-eq-bar" style="animation-delay:0.25s"></div><div class="vc-eq-bar" style="animation-delay:0.30s"></div><div class="vc-eq-bar" style="animation-delay:0.35s"></div><div class="vc-eq-bar" style="animation-delay:0.40s"></div><div class="vc-eq-bar" style="animation-delay:0.45s"></div><div class="vc-eq-bar" style="animation-delay:0.50s"></div><div class="vc-eq-bar" style="animation-delay:0.55s"></div><div class="vc-eq-bar" style="animation-delay:0.60s"></div><div class="vc-eq-bar" style="animation-delay:0.65s"></div><div class="vc-eq-bar" style="animation-delay:0.70s"></div><div class="vc-eq-bar" style="animation-delay:0.75s"></div><div class="vc-eq-bar" style="animation-delay:0.80s"></div><div class="vc-eq-bar" style="animation-delay:0.85s"></div>
+  </div>
+
+  <div class="vc-controls">
+    <button class="vc-ctrl-btn vc-ctrl-sm" onclick="location.href='../index.html'" title="Go to Chat">💬</button>
+    <button class="vc-ctrl-btn vc-main-btn" id="vcMainBtn" onclick="toggleListening()">◎</button>
+    <button class="vc-ctrl-btn vc-ctrl-sm" onclick="clearMessages()" title="Clear">✕</button>
+  </div>
+</div>
+
+<div class="vc-wake-hint">Say <em style="color:var(--ec)">"Hey Soul"</em> to activate</div>
+
+<div class="vc-chat" id="vcChat"></div>
+<nav class="os-nav" id="osNav"></nav>
+
+<script src="../scripts/soul-core.js"></script>
+<script src="../modules/auto-voice-trigger.js"></script>
+<script src="../modules/soul-features.js"></script>
+<script src="../modules/page-shell.js"></script>
+<script>
+buildNav('');
+buildParticles('bgCanvas');
+
+/* ── Restore last mood colour so --ec and --ec-rgb are correct on this page ── */
+(function() {
+  const MOOD_COL = {
+    neutral:'#00c8ff', joy:'#ffe040', happy:'#ffe040', calm:'#38f098',
+    sad:'#00c8ff', angry:'#ffe040', stressed:'#ffe040', fear:'#00c8ff',
+    love:'#38f098', surprised:'#ffe040', distress:'#00c8ff',
+    anxious:'#00c8ff', academic:'#38f098'
+  };
+  function hexRgb(h){h=h.replace('#','');return parseInt(h.slice(0,2),16)+','+parseInt(h.slice(2,4),16)+','+parseInt(h.slice(4,6),16);}
+  const emo = localStorage.getItem('ms_last_mood_emotion') || 'neutral';
+  const col = MOOD_COL[emo] || '#00c8ff';
+  document.documentElement.style.setProperty('--ec', col);
+  document.documentElement.style.setProperty('--ec-rgb', hexRgb(col));
+
+  /* Update wake hint to show custom AI nickname if set */
+  const nick = localStorage.getItem('ms_ai_nick') || '';
+  const wakeEl = document.querySelector('.vc-wake-hint');
+  if (wakeEl && nick) {
+    wakeEl.innerHTML = 'Say <em style="color:var(--ec)">"Hey ' + nick + '"</em> or tap orb to activate';
+  }
+})();
+
+let _state='idle', _rec=null, _analyser=null, _audioCtx=null, _dataArr=null, _stream=null, _animFrame=null;
+const canvas=document.getElementById('vcCanvas'), ctx=canvas.getContext('2d');
+
+function setState(s){
+  _state=s;
+  const page=document.getElementById('vcPage');
+  const lbl=document.getElementById('vcStateLabel');
+  const btn=document.getElementById('vcMainBtn');
+  const eq=document.getElementById('vcEq');
+  const inner=document.getElementById('vcOrbInner');
+  ['idle','listening','thinking','speaking'].forEach(c=>page.classList.remove('vc-state-'+c));
+  page.classList.add('vc-state-'+s);
+  const labels={idle:'Tap orb or say "Hey Soul"',listening:'Listening…',thinking:'Thinking…',speaking:'Speaking…'};
+  lbl.textContent=labels[s]||s;
+  btn.textContent=s==='listening'?'■':'◎';
+  inner.textContent=s==='thinking'?'…':s==='speaking'?'♪':'◎';
+  eq.classList.toggle('show', s==='speaking');
+}
+
+async function startListen(){
+  setState('listening');
+  try{
+    _stream=await navigator.mediaDevices.getUserMedia({audio:true});
+    _audioCtx=new(window.AudioContext||window.webkitAudioContext)();
+    const src=_audioCtx.createMediaStreamSource(_stream);
+    _analyser=_audioCtx.createAnalyser();_analyser.fftSize=512;
+    src.connect(_analyser);_dataArr=new Uint8Array(_analyser.frequencyBinCount);
+  }catch(e){}
+  drawWave();
+  const SR=window.SpeechRecognition||window.webkitSpeechRecognition;
+  if(!SR){setTimeout(()=>{addMsg('user','I need some guidance today.');handleTranscript('I need some guidance today.');},1800);return;}
+  _rec=new SR();_rec.continuous=false;_rec.interimResults=true;_rec.lang='en-US';
+  let _sil=null;
+  _rec.onresult=e=>{
+    let fin='',tmp='';
+    for(let i=e.resultIndex;i<e.results.length;i++){const t=e.results[i][0].transcript;if(e.results[i].isFinal)fin+=t;else tmp+=t;}
+    if(fin||tmp)document.getElementById('vcTranscript').textContent=fin||tmp;
+    clearTimeout(_sil);
+    if(fin){stopListen();addMsg('user',fin.trim());handleTranscript(fin.trim());}
+    else _sil=setTimeout(()=>{if(_state==='listening')stopListen();},3000);
+  };
+  _rec.onerror=()=>stopListen();
+  _rec.onend=()=>{if(_state==='listening')setState('idle');};
+  try{_rec.start();}catch(e){setState('idle');}
+}
+
+function stopListen(){
+  _stream?.getTracks().forEach(t=>t.stop());
+  _audioCtx?.close().catch(()=>{});
+  _analyser=null;_audioCtx=null;_dataArr=null;_stream=null;
+  try{_rec?.stop();}catch(e){}
+}
+
+async function handleTranscript(text){
+  setState('thinking');
+  const res=await soulAPI(text,'VOICE_COMPANION');
+  const reply=res.response||"I'm here with you.";
+  /* Apply mood colour from response emotion */
+  if (res.emotion) {
+    const MOOD_COL={neutral:'#00c8ff',joy:'#ffe040',happy:'#ffe040',calm:'#38f098',sad:'#00c8ff',angry:'#ffe040',stressed:'#ffe040',fear:'#00c8ff',love:'#38f098',surprised:'#ffe040',distress:'#00c8ff',anxious:'#00c8ff',academic:'#38f098'};
+    const col=MOOD_COL[res.emotion]||'#00c8ff';
+    const h=col.replace('#','');
+    document.documentElement.style.setProperty('--ec',col);
+    document.documentElement.style.setProperty('--ec-rgb',parseInt(h.slice(0,2),16)+','+parseInt(h.slice(2,4),16)+','+parseInt(h.slice(4,6),16));
+    try{localStorage.setItem('ms_last_mood_emotion',res.emotion);localStorage.setItem('ms_last_mood_col',col);}catch(e){}
+  }
+  setState('speaking');
+  addMsg('ai',reply);
+  document.getElementById('vcTranscript').textContent='';
+  if('speechSynthesis' in window){
+    const u=new SpeechSynthesisUtterance(reply.slice(0,300));
+    u.rate=0.9;u.pitch=1.05;
+    u.onend=()=>setState('idle');
+    speechSynthesis.speak(u);
+  } else { setTimeout(()=>setState('idle'),3000); }
+}
+
+function toggleListening(){
+  SoulCore?.SFX?.click?.();
+  if(_state==='listening'||_state==='thinking'||_state==='speaking'){
+    stopListen(); speechSynthesis.cancel(); setState('idle');
+  } else { startListen(); }
+}
+
+function drawWave(){
+  cancelAnimationFrame(_animFrame);
+  const W=280,H=280,cx=140,cy=140;
+  ctx.clearRect(0,0,W,H);
+  if(_state==='listening'&&_analyser&&_dataArr){
+    _analyser.getByteFrequencyData(_dataArr);
+    for(let i=0;i<72;i++){
+      const v=_dataArr[Math.floor(i*_dataArr.length/72)]/255;
+      const a=(i/72)*Math.PI*2;
+      const r2=90+v*55;
+      ctx.beginPath();ctx.moveTo(cx+Math.cos(a)*82,cy+Math.sin(a)*82);
+      ctx.lineTo(cx+Math.cos(a)*r2,cy+Math.sin(a)*r2);
+      ctx.strokeStyle=`rgba(0,200,255,${.25+v*.75})`;ctx.lineWidth=2.5;ctx.stroke();
+    }
+  } else {
+    const t=Date.now()/1000;
+    const r=86+Math.sin(t*1.1)*7;
+    const g=ctx.createRadialGradient(cx,cy,r-10,cx,cy,r+22);
+    g.addColorStop(0,'rgba(0,200,255,.18)');g.addColorStop(1,'rgba(0,200,255,0)');
+    ctx.beginPath();ctx.arc(cx,cy,r+15,0,Math.PI*2);ctx.fillStyle=g;ctx.fill();
+  }
+  _animFrame=requestAnimationFrame(drawWave);
+}
+drawWave();
+
+function addMsg(role, text){
+  const chat=document.getElementById('vcChat');
+  const d=document.createElement('div');
+  d.className='vc-msg vc-msg-'+role;
+  d.textContent=text;
+  chat.appendChild(d);
+  chat.scrollTop=chat.scrollHeight;
+}
+
+function clearMessages(){document.getElementById('vcChat').innerHTML='';}
+
+// Override VoiceSystem for this page
+window.VoiceSystem={show:startListen,hide:stopListen,setState,onTranscript:()=>{}};
+window.toggleListening=toggleListening; window.clearMessages=clearMessages;
+</script>
+</body>
+</html>
