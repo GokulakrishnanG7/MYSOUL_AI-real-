@@ -13,13 +13,15 @@ source venv/bin/activate        # Windows: venv\Scripts\activate
 pip install -r requirements.txt
 
 cp .env.example .env
-# Edit .env — at minimum set OPENROUTER_API_KEY (get one at https://openrouter.ai/keys)
+# Edit .env — optionally set OPENROUTER_API_KEY (get one at https://openrouter.ai/keys)
 
 uvicorn main:app --reload --port 8000
 ```
 
-Open `http://localhost:8000/docs` for interactive Swagger docs of every
-endpoint below.
+Open `http://localhost:8000/` for the MySoul AI frontend. The same process
+serves `/scripts/*`, `/styles/*`, `/pages/*`, and all `/api/*` routes, so no
+second frontend server is required. Open `http://localhost:8000/docs` for
+interactive Swagger docs of every endpoint below.
 
 Optional (for the Ollama fallback to actually work locally):
 ```bash

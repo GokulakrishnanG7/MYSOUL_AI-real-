@@ -197,6 +197,9 @@ input{font-family:inherit}
 
 /* Setup hint from onboarding */
 const setup = JSON.parse(localStorage.getItem('ms_setup')||'{}');
+let rawUid = localStorage.getItem('ms_uid');
+if(!rawUid){ rawUid = Math.random().toString(36).slice(2,10); localStorage.setItem('ms_uid', rawUid); }
+const deviceUserId = rawUid.startsWith('user_') ? rawUid : 'user_' + rawUid;
 if(setup.user_name){
   const hint = document.getElementById('setupHint');
   hint.innerHTML = `Welcome, <strong>${setup.user_name}</strong>! Sign in or create an account to continue with <strong>${setup.ai_name||'MySoul'}</strong>.`;
@@ -278,7 +281,7 @@ document.getElementById('registerBtn').addEventListener('click', async ()=>{
   try {
     const r = await fetch('/api/auth/register', {
       method:'POST', headers:{'Content-Type':'application/json'},
-      body:JSON.stringify({name, email, password:pass, ...setup}),
+      body:JSON.stringify({name, email, password:pass, user_id:deviceUserId, ...setup}),
       signal:AbortSignal.timeout(10000),
     });
     const d = await r.json();

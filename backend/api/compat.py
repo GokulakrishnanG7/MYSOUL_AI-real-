@@ -73,6 +73,26 @@ EMOTION_ENGINE_TO_FRONTEND = {
     "confusion": "neutral",
 }
 
+FRONTEND_HINTS = {
+    "stressed": ["Take three slow breaths", "Break the next task into one small step"],
+    "anxious": ["Try box breathing", "Name five things you can see"],
+    "sad": ["Reach out to someone you trust", "Writing down what you feel may help"],
+    "angry": ["Pause before responding", "A short walk can help release tension"],
+    "distress": ["Please reach out to someone you trust right now", "You do not have to face this alone"],
+    "fear": ["Focus on what you can control right now", "Name the feeling without judging it"],
+    "calm": ["This is a good moment to journal or reflect"],
+    "joy": ["Capture this feeling and what created it"],
+    "happy": ["Notice what is making you smile today"],
+    "neutral": ["Take a moment to check in with yourself"],
+}
+
+FRONTEND_COLORS = {
+    "neutral": "#00c8ff", "joy": "#ffe040", "happy": "#ffe040", "calm": "#38f098",
+    "sad": "#00c8ff", "angry": "#ffe040", "stressed": "#ffe040", "fear": "#00c8ff",
+    "love": "#38f098", "surprised": "#ffe040", "distress": "#00c8ff", "anxious": "#00c8ff",
+    "academic": "#38f098",
+}
+
 
 def _intensity_label(value: float) -> str:
     if value >= 0.7:
@@ -89,6 +109,19 @@ def _get_or_create_user(db: Session, user_id: str, *, name: str | None, ai_nickn
     fly using the given id as the primary key."""
     user = db.query(User).filter(User.id == user_id).first()
     if user:
+        changed = False
+        if name is not None and user.name != name:
+            user.name = name
+            changed = True
+        if ai_nickname is not None and user.ai_nickname != ai_nickname:
+            user.ai_nickname = ai_nickname
+            changed = True
+        if language and user.language != language:
+            user.language = language
+            changed = True
+        if changed:
+            db.commit()
+            db.refresh(user)
         return user
     user = User(id=user_id, name=name, ai_nickname=ai_nickname, language=language)
     db.add(user)
@@ -170,15 +203,20 @@ async def _run_chat_turn(db: Session, *, user: User, text: str) -> dict:
     frontend_emotion = "distress" if distress_result["distress"] else EMOTION_ENGINE_TO_FRONTEND.get(
         emotion_result["emotion"], "neutral"
     )
+    intensity = _intensity_label(emotion_result["intensity"])
 
     return {
         "response": llm_result["reply"],
         "emotion": frontend_emotion,
-        "intensity": _intensity_label(emotion_result["intensity"]),
+        "intensity": intensity,
         "pattern": None,
         "context": None,
         "urgency": "high" if distress_result["distress"] else None,
-        "hints": [],
+        "hints": FRONTEND_HINTS.get(frontend_emotion, FRONTEND_HINTS["neutral"]),
+        "emotion_state": {
+            "color": FRONTEND_COLORS.get(frontend_emotion, FRONTEND_COLORS["neutral"]),
+            "label": frontend_emotion.replace("_", " ").upper(),
+        },
         "errors": [],
     }
 
@@ -218,7 +256,9 @@ async def compat_chat_voice(
             "transcript": "",
             "response": "I couldn't quite catch that — could you try again?",
             "emotion": "neutral", "intensity": "low", "pattern": None,
-            "context": None, "urgency": None, "hints": [], "errors": ["empty_transcript"],
+            "context": None, "urgency": None, "hints": FRONTEND_HINTS["neutral"],
+            "emotion_state": {"color": FRONTEND_COLORS["neutral"], "label": "NEUTRAL"},
+            "errors": ["empty_transcript"],
         }
 
     result = await _run_chat_turn(db, user=user, text=transcript)

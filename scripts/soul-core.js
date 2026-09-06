@@ -5,21 +5,35 @@
 'use strict';
 
 const SoulCore = (() => {
-  const BASE  = 'http://localhost:8000';
+  // Use the FastAPI host when the app is served by the backend, while still
+  // supporting a separately hosted frontend and direct file previews.
+  const localStaticServer = ['localhost', '127.0.0.1'].includes(window.location.hostname)
+    && window.location.port && window.location.port !== '8000';
+  const sameOrigin = /^https?:$/.test(window.location.protocol);
+  const BASE = window.MYSOUL_API_BASE
+    || (localStaticServer || !sameOrigin ? 'http://localhost:8000' : window.location.origin);
   const API_CHAT  = `${BASE}/api/chat`;
   const API_VOICE = `${BASE}/api/chat/voice`;
   const API_ALERT = `${BASE}/api/alerts/family`;
 
-  const setup  = JSON.parse(localStorage.getItem('ms_setup') || '{}');
+  function readSetup() {
+    try { return JSON.parse(localStorage.getItem('ms_setup') || '{}'); }
+    catch { return {}; }
+  }
+  function currentProfile() {
+    const setup = readSetup();
+    return {
+      ai_name: setup.ai_name || localStorage.getItem('ms_ai_nick') || 'MySoul',
+      user_name: setup.user_name || 'Friend',
+      language: setup.language || 'en',
+    };
+  }
+
   const UID    = (() => {
     let id = localStorage.getItem('ms_uid');
     if(!id){ id = Math.random().toString(36).slice(2,10); localStorage.setItem('ms_uid',id); }
     return 'user_' + id;
   })();
-  const AI_NAME   = setup.ai_name   || 'MySoul';
-  const USER_NAME = setup.user_name || 'Friend';
-  const LANG      = setup.language  || 'en';
-
   /* Mood → background colour rule:
      GREEN  (#38f098) = positive / calm moods
      YELLOW (#ffe040) = energetic / excited moods
@@ -119,9 +133,10 @@ const SoulCore = (() => {
 
   async function sendMessage(text){
     try{
+      const profile = currentProfile();
       const r=await fetch(API_CHAT,{
         method:'POST',headers:_authHeaders(),
-        body:JSON.stringify({user_id:UID,text,language:LANG,user_name:USER_NAME,ai_name:AI_NAME}),
+        body:JSON.stringify({user_id:UID,text,...profile}),
         signal:AbortSignal.timeout(15000),
       });
       if(!r.ok)throw new Error(`HTTP ${r.status}`);
@@ -153,7 +168,8 @@ const SoulCore = (() => {
   async function sendVoice(audioBlob){
     const fd=new FormData();
     fd.append('audio',audioBlob,'recording.webm');
-    fd.append('user_id',UID);fd.append('language',LANG);
+    const profile = currentProfile();
+    fd.append('user_id',UID);fd.append('language',profile.language);
     const t=sessionStorage.getItem('ms_jwt');
     const headers=t?{'Authorization':`Bearer ${t}`}:{};
     const r=await fetch(API_VOICE,{method:'POST',headers,body:fd,signal:AbortSignal.timeout(20000)});
@@ -200,9 +216,10 @@ const SoulCore = (() => {
     const u=new SpeechSynthesisUtterance(txt);
     u.rate=.96;u.pitch=1.06;u.volume=.85;
     const lm={ta:'ta-IN',hi:'hi-IN',te:'te-IN',ml:'ml-IN',kn:'kn-IN',fr:'fr-FR',es:'es-ES',de:'de-DE',zh:'zh-CN',ja:'ja-JP',ar:'ar-SA'};
-    u.lang=lm[LANG]||'en-US';
+    const language = currentProfile().language;
+    u.lang=lm[language]||'en-US';
     const vs=window.speechSynthesis.getVoices();
-    const v=vs.find(v=>v.lang===u.lang)||vs.find(v=>v.lang.startsWith(LANG))||vs.find(v=>v.lang==='en-US')||vs[0];
+    const v=vs.find(v=>v.lang===u.lang)||vs.find(v=>v.lang.startsWith(language))||vs.find(v=>v.lang==='en-US')||vs[0];
     if(v)u.voice=v;
     window.speechSynthesis.speak(u);
   }
@@ -215,7 +232,7 @@ const SoulCore = (() => {
     getAllEDefs:()=>({...EDEFS}),
     getState:()=>({...S}),
     getPetLine:(e)=>{const l=PET[e]||PET.neutral;return l[Math.floor(Math.random()*l.length)];},
-    getSetup:()=>({ai_name:AI_NAME,user_name:USER_NAME,language:LANG}),
+    getSetup:()=>currentProfile(),
     SFX,speak,stopSpeak,toggleTTS,
     get online(){return S.online;},
     get tts(){return S.tts;},

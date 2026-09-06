@@ -14,9 +14,12 @@ from __future__ import annotations
 
 import logging
 from contextlib import asynccontextmanager
+from pathlib import Path
 
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi.responses import FileResponse
+from fastapi.staticfiles import StaticFiles
 from slowapi import _rate_limit_exceeded_handler
 from slowapi.errors import RateLimitExceeded
 from slowapi.middleware import SlowAPIMiddleware
@@ -29,6 +32,7 @@ from scheduler.followup_scheduler import start_scheduler, stop_scheduler
 
 from api import (
     alerts,
+    auth,
     analytics,
     chat,
     compat,
@@ -91,6 +95,7 @@ app.add_middleware(
 
 # ── Routers ───────────────────────────────────────────────────────────────
 app.include_router(compat.router)  # /api/* — matches your existing frontend JS exactly
+app.include_router(auth.router)  # /api/auth/* — onboarding and account compatibility
 app.include_router(health.router)
 app.include_router(users.router)
 app.include_router(chat.router)
@@ -108,6 +113,15 @@ app.include_router(settings_router.router)
 app.include_router(alerts.router)
 
 
-@app.get("/")
+# Serve the existing vanilla frontend from the same FastAPI process. This keeps
+# relative paths such as /scripts/*, /styles/*, pages/*, and /api/* coherent
+# when the documented command is run from backend/.
+FRONTEND_DIR = Path(__file__).resolve().parents[1]
+
+
+@app.get("/", include_in_schema=False)
 def root():
-    return {"service": "MySoul AI Backend", "status": "awake", "version": "2.0.0"}
+    return FileResponse(FRONTEND_DIR / "index.html")
+
+
+app.mount("/", StaticFiles(directory=FRONTEND_DIR, html=True), name="frontend")

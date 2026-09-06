@@ -357,7 +357,7 @@
   display: flex; gap: 10px; align-items: flex-start;
   margin-bottom: 8px; padding: 10px 12px;
   background: rgba(255, 255, 255, 0.025);
-  border-radius: 12px; border: 1px solid rgba(var(--ec), 0.1);
+  border-radius: 12px; border: 1px solid rgba(var(--ec-rgb), 0.1);
   transition: all 0.2s ease; position: relative;
 }
 .mp-entry:hover { background: rgba(var(--ec-rgb), 0.05); border-color: rgba(var(--ec-rgb), 0.2); }
@@ -943,3 +943,117 @@
   font-size: 14px; pointer-events: none; opacity: .7;
 }
 .composer-input { padding-left: 38px !important; }
+
+
+/* ══════════════════════════════════════
+   POLISH LAYER — connection-safe UI refinement
+   Keeps the existing cosmic palette and layout intact.
+══════════════════════════════════════ */
+:root {
+  --mysoul-glow: 0 18px 55px rgba(0, 0, 0, .28);
+  --mysoul-border: rgba(var(--ec-rgb), .16);
+}
+
+.header,
+.panel,
+.center-stage,
+.wpanel {
+  border-color: var(--mysoul-border);
+}
+
+.header {
+  background: linear-gradient(180deg, rgba(8, 12, 28, .86), rgba(8, 12, 28, .64));
+  box-shadow: 0 1px 0 rgba(var(--ec-rgb), .08), var(--mysoul-glow);
+}
+
+.glass-deep,
+.glass {
+  box-shadow: var(--mysoul-glow), inset 0 1px 0 rgba(255, 255, 255, .035);
+}
+
+.nav-pill,
+.hdr-btn,
+.soul-btn,
+.icon-btn,
+.send-btn {
+  transition: transform .24s ease, border-color .24s ease, background .24s ease,
+    box-shadow .24s ease, color .24s ease;
+}
+
+.nav-pill:hover,
+.hdr-btn:hover,
+.soul-btn:hover,
+.icon-btn:hover,
+.send-btn:hover {
+  transform: translateY(-2px);
+}
+
+.nav-pill:focus-visible,
+.hdr-btn:focus-visible,
+.soul-btn:focus-visible,
+.icon-btn:focus-visible,
+.send-btn:focus-visible,
+button:focus-visible,
+input:focus-visible,
+textarea:focus-visible,
+select:focus-visible {
+  outline: 2px solid var(--ec);
+  outline-offset: 3px;
+}
+
+.chat-input-wrap,
+.chat-composer,
+.input-shell {
+  border-color: rgba(var(--ec-rgb), .24);
+  box-shadow: 0 0 0 1px rgba(var(--ec-rgb), .03), 0 12px 36px rgba(0, 0, 0, .18);
+  transition: border-color .25s ease, box-shadow .25s ease, transform .25s ease;
+}
+
+.chat-input-wrap:focus-within,
+.chat-composer:focus-within,
+.input-shell:focus-within {
+  border-color: rgba(var(--ec-rgb), .58);
+  box-shadow: 0 0 0 4px rgba(var(--ec-rgb), .06), 0 16px 42px rgba(0, 0, 0, .24);
+}
+
+.msg {
+  animation: mysoulMessageIn .36s var(--ease-out-expo, ease-out) both;
+}
+
+.msg-ai .msg-body,
+.msg-user .msg-body {
+  transition: border-color .22s ease, background .22s ease, transform .22s ease;
+}
+
+.msg-ai .msg-body:hover,
+.msg-user .msg-body:hover {
+  transform: translateY(-1px);
+  border-color: rgba(var(--ec-rgb), .22);
+}
+
+.hint-bar,
+.alert-toast,
+.sos-card {
+  box-shadow: 0 22px 70px rgba(0, 0, 0, .42), 0 0 34px rgba(var(--ec-rgb), .12);
+}
+
+@keyframes mysoulMessageIn {
+  from { opacity: 0; transform: translateY(8px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    animation-duration: .01ms !important;
+    animation-iteration-count: 1 !important;
+    scroll-behavior: auto !important;
+    transition-duration: .01ms !important;
+  }
+}
+
+@media (max-width: 640px) {
+  .header { padding-inline: 12px; }
+  .nav-pill span:not(.nav-icon) { display: none; }
+  .nav-pill { min-width: 38px; padding-inline: 10px; }
+  .panel-fab, .vpu-fab { width: 44px; height: 44px; }
+}

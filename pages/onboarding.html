@@ -537,12 +537,19 @@ document.getElementById('confirmBtn').addEventListener('click', async () => {
     lang_label: OB.langLabel,
   }));
 
-  // Call backend API
+  // Call backend API. Reuse the same device id as the chat client so the
+  // backend profile and conversation history stay connected.
   try {
+    let rawUid = localStorage.getItem('ms_uid');
+    if (!rawUid) {
+      rawUid = Math.random().toString(36).slice(2, 10);
+      localStorage.setItem('ms_uid', rawUid);
+    }
+    const userId = rawUid.startsWith('user_') ? rawUid : 'user_' + rawUid;
     const r = await fetch('/api/auth/setup', {
       method:'POST',
       headers:{'Content-Type':'application/json'},
-      body:JSON.stringify({ ai_name: OB.aiName, user_name: OB.userName, language: OB.lang }),
+      body:JSON.stringify({ user_id: userId, ai_name: OB.aiName, user_name: OB.userName, language: OB.lang }),
       signal: AbortSignal.timeout(8000),
     });
     // Even if API fails, continue to auth
